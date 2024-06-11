@@ -1,0 +1,73 @@
+@page "/login"
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavManager
+@inject AccountService AccountService
+
+@using LuzyceWebApp.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Luzyce.Core.Models.User
+@inject IJSRuntime js
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <EditForm Enhance Model="User" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="card-header">Login An Account</div>
+                <div class="card-body">
+
+                    @* Login *@
+                    <div class="form-group mb-3">
+                        <input @bind="User.Login"
+                               class="form-control"
+                               type="text"
+                               placeholder="Login">
+                        </input>
+                    </div>
+
+                    @* Password *@
+                    <div class="form-group">
+                        <div class="input-group mb-3">
+                            <input class="form-control"
+                                   @bind="User.Password"
+                                   placeholder="Password"
+                                   aria-label="Password"
+                                   aria-describedby="Password">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary float-end"
+                            type="submit">
+                        Login
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+	public LoginDto User { get; set; } = new LoginDto { IpAddress = "127.0.0.1" };
+
+	async Task HandleLogin()
+	{
+		var resp = await AccountService.LoginAccount(User);
+		if (resp.Result is not null)
+		{
+			await js.InvokeVoidAsync("alert", "logged");
+
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+			await customAuthStateProvider.UpdateAuthenticationState(resp.Token);
+            NavManager.NavigateTo("/", forceLoad: true);
+        }
+		else
+		{
+			await js.InvokeVoidAsync("alert", "error");
+		}
+
+        return;
+    }
+}
