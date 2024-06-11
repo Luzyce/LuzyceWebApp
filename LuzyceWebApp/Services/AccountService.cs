@@ -1,7 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using Luzyce.Core.Models.User;
 using LuzyceWebApp.Pages;
-using static LuzyceWebApp.Pages.Weather;
 
 namespace LuzyceWebApp.Services;
 
