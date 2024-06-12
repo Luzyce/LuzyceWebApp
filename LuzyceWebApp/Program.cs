@@ -15,6 +15,7 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<IUserAccount, AccountService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AccountService>();
 
 await builder.Build().RunAsync();

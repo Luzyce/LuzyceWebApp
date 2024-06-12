@@ -8,41 +8,39 @@
 @using Luzyce.Core.Models.User
 @inject IJSRuntime js
 
-@if (showError)
-{
-    <div class="alert alert-danger" role="alert">
-        @errorMessage
-    </div>
-}
 
-<EditForm Model="User" OnValidSubmit="HandleLogin">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="row">
-        <div class="col">
-            @* Login *@
-            <input @bind="User.Login"
-                   class="form-control"
-                   type="text"
-                   placeholder="Login">
-            </input>
-        </div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            @if (showError)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @errorMessage
+                </div>
+            }
+            <div class="card">
+                <div class="card-body">
+                    <EditForm Model="User" OnValidSubmit="HandleLogin">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
 
-        <div class="col">
-            @* Password *@
-            <input @bind="User.Password"
-                   class="form-control"
-                   type="password"
-                   placeholder="Password">
-            </input>
+                        <div class="form-group">
+                            <label for="login">Login</label>
+                            <input @bind="User.Login" class="form-control" type="text" id="login">
+                        </div>
+                        <br>
+                        <div class="form-group">
+                            <label for="password">Hasło</label>
+                            <input @bind="User.Password" class="form-control" type="password" id="password">
+                        </div>
+                        <br>
+                        <button class="btn btn-primary  form-control" type="submit">Zaloguj się</button>
+                    </EditForm>
+                </div>
+            </div>
         </div>
     </div>
-    <br>
-    <button class="btn btn-primary float-end"
-            type="submit">
-        Login
-    </button>
-</EditForm>
+</div>
 
 @code {
     public LoginDto User { get; set; } = new LoginDto { IpAddress = "127.0.0.1" };

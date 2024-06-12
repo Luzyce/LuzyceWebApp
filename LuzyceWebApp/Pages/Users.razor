@@ -1,0 +1,56 @@
+@page "/users"
+@using Luzyce.Core.Models.User
+@using LuzyceWebApp.Services
+@inject UserService UserService
+@inject NavigationManager NavManager
+
+<h3>Users</h3>
+
+@if (users == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!users.Any())
+{
+    <p>No users available.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Last Name</th>
+                <th>Login</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Name</td>
+                    <td>@user.LastName</td>
+                    <td>@user.Login</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<GetUserResponseDto> users;
+
+	protected override async Task OnInitializedAsync()
+	{
+		try
+		{
+			users = await UserService.GetUsersAsync();
+		}
+		catch (HttpRequestException ex)
+		{
+			NavManager.NavigateTo("/login");
+		}
+	}
+}

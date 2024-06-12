@@ -15,7 +15,7 @@ public class CustomAuthenticationStateProvider(ILocalStorageService localStorage
     {
         try
         {
-            string stringToken = await localStorageService.GetItemAsStringAsync("token");
+            string stringToken = await localStorageService.GetItemAsStringAsync("token") ?? "";
 
             if (string.IsNullOrWhiteSpace(stringToken))
                 return await Task.FromResult(new AuthenticationState(anonymous));
