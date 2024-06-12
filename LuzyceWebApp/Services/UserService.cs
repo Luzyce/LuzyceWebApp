@@ -29,4 +29,14 @@ public class UserService
         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         return await _httpClient.GetFromJsonAsync<List<GetUserResponseDto>>("/api/user") ?? [];
     }
+
+    public async Task<GetUserResponseDto> GetUserByIdAsync(int id)
+    {
+        return await _httpClient.GetFromJsonAsync<GetUserResponseDto>($"api/user/{id}") ?? new GetUserResponseDto();
+    }
+
+    public async Task UpdateUserAsync(GetUserResponseDto user)
+    {
+        await _httpClient.PutAsJsonAsync($"api/user/{user.Id}", user);
+    }
 }

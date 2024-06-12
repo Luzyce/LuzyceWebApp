@@ -4,15 +4,9 @@
 @inject UserService UserService
 @inject NavigationManager NavManager
 
-<h3>Users</h3>
-
-@if (users == null)
+@if (users == null || !users.Any())
 {
-    <p><em>Loading...</em></p>
-}
-else if (!users.Any())
-{
-    <p>No users available.</p>
+    <p><em>Ładowanie...</em></p>
 }
 else
 {
@@ -20,9 +14,9 @@ else
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Name</th>
-                <th>Last Name</th>
-                <th>Login</th>
+                <th>Imie</th>
+                <th>Nazwisko</th>
+                <th>Edycja</th>
             </tr>
         </thead>
         <tbody>
@@ -32,7 +26,7 @@ else
                     <td>@user.Id</td>
                     <td>@user.Name</td>
                     <td>@user.LastName</td>
-                    <td>@user.Login</td>
+                    <td><a class="btn btn-primary btn-sm" href="@($"edit/{user.Id}")">Edytuj</a></td>
                 </tr>
             }
         </tbody>
@@ -40,17 +34,10 @@ else
 }
 
 @code {
-    private List<GetUserResponseDto> users;
+    private List<GetUserResponseDto> users = new List<GetUserResponseDto>();
 
-	protected override async Task OnInitializedAsync()
-	{
-		try
-		{
-			users = await UserService.GetUsersAsync();
-		}
-		catch (HttpRequestException ex)
-		{
-			NavManager.NavigateTo("/login");
-		}
-	}
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserService.GetUsersAsync();
+    }
 }

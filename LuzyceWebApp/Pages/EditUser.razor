@@ -1,0 +1,59 @@
+@page "/edit/{userId}"
+@using Luzyce.Core.Models.User
+@using LuzyceWebApp.Services
+@inject UserService UserService
+@inject NavigationManager NavManager
+
+@if (user == null)
+{
+	<p><em>£adowanie...</em></p>
+}
+else
+{
+	<h1>Edytuj u¿ytkownika</h1>
+	<form @onsubmit="HandleSubmit">
+		<div class="form-group">
+			<label for="name">Imiê:</label>
+			<input type="text" class="form-control" id="name" @bind="user.Name">
+		</div>
+		<div class="form-group">
+			<label for="lastName">Nazwisko:</label>
+			<input type="text" class="form-control" id="lastName" @bind="user.LastName">
+		</div>
+		<button type="submit" class="btn btn-primary">Zapisz</button>
+	</form>
+}
+
+@code {
+	[Parameter]
+	public string userId
+	{
+		get { return uId.ToString(); }
+		set
+		{
+			int.TryParse(value, out uId);
+		}
+	}
+
+	public int uId = -1;
+
+
+	private GetUserResponseDto user;
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (uId < 1)
+		{
+			NavManager.NavigateTo("/users");
+			return;
+		}
+
+		user = await UserService.GetUserByIdAsync(uId);
+	}
+
+	private async Task HandleSubmit()
+	{
+		await UserService.UpdateUserAsync(user);
+		NavManager.NavigateTo("/users");
+	}
+}
