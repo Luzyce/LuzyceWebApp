@@ -30,12 +30,12 @@ public class UserService
         return await _httpClient.GetFromJsonAsync<List<GetUserResponseDto>>("/api/user") ?? [];
     }
 
-    public async Task<GetUserResponseDto> GetUserByIdAsync(int id)
+    public async Task<GetUserForUpdateDto> GetUserByIdAsync(int id)
     {
-        return await _httpClient.GetFromJsonAsync<GetUserResponseDto>($"api/user/{id}") ?? new GetUserResponseDto();
+        return await _httpClient.GetFromJsonAsync<GetUserForUpdateDto>($"api/user/{id}") ?? new GetUserForUpdateDto();
     }
 
-    public async Task UpdateUserAsync(GetUserResponseDto user)
+    public async Task UpdateUserAsync(GetUserForUpdateDto user)
     {
         await _httpClient.PutAsJsonAsync($"api/user/{user.Id}", user);
     }
