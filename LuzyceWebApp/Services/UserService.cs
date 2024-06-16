@@ -49,4 +49,9 @@ public class UserService
         return await _httpClient.GetFromJsonAsync<List<GetRoleDto>>("api/user/roles") ?? new List<GetRoleDto>();
     }
 
+    public async Task ResetPasswordAsync(int userId, UpdatePasswordDto newPassword)
+    {
+        await _httpClient.PutAsJsonAsync($"api/user/{userId}/password", newPassword);
+    }
+
 }
