@@ -4,13 +4,15 @@ WORKDIR /src
 COPY ["LuzyceWebApp/LuzyceWebApp.csproj", "LuzyceWebApp/"]
 RUN dotnet restore "./LuzyceWebApp/LuzyceWebApp.csproj"
 
-COPY . ./
-WORKDIR /src/LuzyceWebapp
-RUN dotnet build "LuzyceWebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
+COPY . .
+WORKDIR "/src/LuzyceWebapp"
+RUN ls -la
+RUN dotnet build "./LuzyceWebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "LuzyceWebApp.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN ls -la
+RUN dotnet publish "./LuzyceWebApp.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
