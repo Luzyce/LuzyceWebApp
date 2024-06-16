@@ -1,17 +1,17 @@
-@page "/edit/{userId}"
+@page "/users/edit/{userId}"
 @using Luzyce.Core.Models.User
 @using LuzyceWebApp.Services
 @inject UserService UserService
 @inject NavigationManager NavManager
 
-@if (user == null)
+@if (user == null || roles == null)
 {
-	<p><em>Ładowanie...</em></p>
+    <p><em>Ładowanie...</em></p>
 }
 else
 {
-	<h1>Edytuj użytkownika</h1>
-	<form @onsubmit="HandleSubmit">
+    <h1>Edytuj użytkownika</h1>
+    <form @onsubmit="HandleSubmit">
         <div class="row">
             <div class="col form-group">
                 <label>Imię:</label>
@@ -20,16 +20,6 @@ else
             <div class="col form-group">
                 <label>Nazwisko:</label>
                 <input type="text" class="form-control" id="lastName" @bind="user.LastName">
-		    </div>
-        </div>
-        <br>
-        <div class="row">
-            <div class="col form-group">
-                <label>Login:</label>
-                <input type="text" class="form-control" id="login" @bind="user.Login">
-            </div>
-            <div class="col">
-                <button class="btn btn-primary">Zresetuj Hasło</button>
             </div>
         </div>
         <br>
@@ -44,41 +34,69 @@ else
             </div>
         </div>
         <br>
-
-		<button type="submit" class="btn btn-primary">Zapisz</button>
-	</form>
+        <div class="row">
+            <div class="col form-group">
+                <label>Login:</label>
+                <input type="text" class="form-control" id="login" @bind="user.Login">
+            </div>
+            <div class="col form-group">
+                <label>Role:</label>
+                <select class="form-control" @bind="user.RoleId">
+                    @foreach (var role in roles)
+                    {
+                        <option value="@role.Id">@role.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col">
+                <br>
+                <a class="btn btn-primary" href="@($"users/resetpassword/{user.Id}")">Zresetuj Hasło</a>
+            </div>
+        </div>
+        <br>
+        <button type="submit" class="btn btn-primary">Zapisz</button>
+    </form>
 }
 
 @code {
-	[Parameter]
-	public string userId
-	{
-		get { return uId.ToString(); }
-		set
-		{
-			int.TryParse(value, out uId);
-		}
-	}
+    [Parameter]
+    public string userId
+    {
+        get { return uId.ToString(); }
+        set
+        {
+            int.TryParse(value, out uId);
+        }
+    }
 
-	public int uId = -1;
+    public int uId = -1;
+    private GetUserForUpdateDto user = new GetUserForUpdateDto();
+    private List<GetRoleDto> roles;
 
+    protected override async Task OnInitializedAsync()
+    {
+        if (uId < 1)
+        {
+            NavManager.NavigateTo("/users");
+            return;
+        }
 
-	private GetUserForUpdateDto user = new GetUserForUpdateDto();
+        user = await UserService.GetUserByIdAsync(uId);
+        roles = await UserService.GetRolesAsync();
+    }
 
-	protected override async Task OnInitializedAsync()
-	{
-		if (uId < 1)
-		{
-			NavManager.NavigateTo("/users");
-			return;
-		}
-
-		user = await UserService.GetUserByIdAsync(uId);
-	}
-
-	private async Task HandleSubmit()
-	{
-		await UserService.UpdateUserAsync(user);
-		NavManager.NavigateTo("/users");
-	}
+    private async Task HandleSubmit()
+    {
+        UpdateUserDto userUpdate = new UpdateUserDto
+        {
+            Name = user.Name,
+            LastName = user.LastName,
+            Email = user.Email,
+            Hash = user.Hash,
+            Login = user.Login,
+            RoleId = user.RoleId
+        };
+        await UserService.UpdateUserAsync(userUpdate, uId);
+        NavManager.NavigateTo("/users");
+    }
 }

@@ -1,7 +1,4 @@
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using Blazored.LocalStorage;
 using Luzyce.Core.Models.User;
 
@@ -27,7 +24,7 @@ public class UserService
         }
 
         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        return await _httpClient.GetFromJsonAsync<List<GetUserResponseDto>>("/api/user") ?? [];
+        return await _httpClient.GetFromJsonAsync<List<GetUserResponseDto>>("/api/user") ?? new List<GetUserResponseDto>();
     }
 
     public async Task<GetUserForUpdateDto> GetUserByIdAsync(int id)
@@ -35,8 +32,21 @@ public class UserService
         return await _httpClient.GetFromJsonAsync<GetUserForUpdateDto>($"api/user/{id}") ?? new GetUserForUpdateDto();
     }
 
-    public async Task UpdateUserAsync(GetUserForUpdateDto user)
+    public async Task UpdateUserAsync(UpdateUserDto user, int id)
     {
-        await _httpClient.PutAsJsonAsync($"api/user/{user.Id}", user);
+        await _httpClient.PutAsJsonAsync($"api/user/{id}", user);
     }
+
+    public async Task<List<GetRoleDto>> GetRolesAsync()
+    {
+        string? token = await _localStorageService.GetItemAsStringAsync("token");
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new HttpRequestException("Token is missing");
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        return await _httpClient.GetFromJsonAsync<List<GetRoleDto>>("/user/roles") ?? new List<GetRoleDto>();
+    }
+
 }
