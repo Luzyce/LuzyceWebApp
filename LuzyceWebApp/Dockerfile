@@ -5,7 +5,7 @@ COPY ["LuzyceWebApp/LuzyceWebApp.csproj", "LuzyceWebApp/"]
 RUN dotnet restore "./LuzyceWebApp/LuzyceWebApp.csproj"
 
 COPY . .
-WORKDIR "/src/LuzyceWebapp"
+WORKDIR "/src/LuzyceWebApp"
 RUN ls -la
 RUN dotnet build "./LuzyceWebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
