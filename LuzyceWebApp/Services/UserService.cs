@@ -46,7 +46,7 @@ public class UserService
         }
 
         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        return await _httpClient.GetFromJsonAsync<List<GetRoleDto>>("/user/roles") ?? new List<GetRoleDto>();
+        return await _httpClient.GetFromJsonAsync<List<GetRoleDto>>("api/user/roles") ?? new List<GetRoleDto>();
     }
 
 }
