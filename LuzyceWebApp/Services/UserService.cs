@@ -46,7 +46,12 @@ public class UserService
         }
 
         _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        return await _httpClient.GetFromJsonAsync<List<GetRoleDto>>("/user/roles") ?? new List<GetRoleDto>();
+        return await _httpClient.GetFromJsonAsync<List<GetRoleDto>>("api/user/roles") ?? new List<GetRoleDto>();
+    }
+
+    public async Task ResetPasswordAsync(int userId, UpdatePasswordDto newPassword)
+    {
+        await _httpClient.PutAsJsonAsync($"api/user/{userId}/password", newPassword);
     }
 
 }
