@@ -39,13 +39,6 @@ public class UserService
 
     public async Task<List<GetRoleDto>> GetRolesAsync()
     {
-        string? token = await _localStorageService.GetItemAsStringAsync("token");
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            throw new HttpRequestException("Token is missing");
-        }
-
-        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         return await _httpClient.GetFromJsonAsync<List<GetRoleDto>>("api/user/roles") ?? new List<GetRoleDto>();
     }
 
@@ -54,4 +47,8 @@ public class UserService
         await _httpClient.PutAsJsonAsync($"api/user/{userId}/password", newPassword);
     }
 
+    public async Task CreateUserAsync(CreateUserDto user)
+    {
+        await _httpClient.PostAsJsonAsync("/api/user", user);
+    }
 }
