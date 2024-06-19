@@ -1,0 +1,80 @@
+@page "/productionOrder/new"
+@using Luzyce.Core.Models.Order
+@using LuzyceWebApp.Services
+@inject OrderService OrderService
+
+@if (orders == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <ul class="list-group">
+                @foreach (var order in orders.Orders)
+                {
+                    <li class="list-group-item" @onclick="() => SelectOrder(order.Id)">
+                        @order.Number - @order.CustomerName
+                    </li>
+                }
+            </ul>
+            @if (orders.CurrentPage > 1)
+            {
+                <button class="btn btn-secondary" @onclick="() => LoadOrders(orders.CurrentPage - 1)">Previous</button>
+            }
+            @if (orders.CurrentPage < orders.TotalPages)
+            {
+                <button class="btn btn-secondary" @onclick="() => LoadOrders(orders.CurrentPage + 1)">Next</button>
+            }
+        </div>
+        <div class="col-md-8">
+            @if (selectedOrder != null)
+            {
+                <h3>Order Items for @selectedOrder.Number</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Quantity in Stock</th>
+                            <th>Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in selectedOrder.Items)
+                        {
+                            <tr>
+                                <td>@item.ProductName</td>
+                                <td>@item.Quantity</td>
+                                <td>@item.QuantityInStock</td>
+                                <td>@item.Unit</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private GetOrdersResponseDto orders;
+    private GetOrderResponseDto selectedOrder;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders(1);
+    }
+
+    private async Task LoadOrders(int pageNumber)
+    {
+        orders = await OrderService.GetOrdersAsync(pageNumber);
+        selectedOrder = null;
+    }
+
+    private void SelectOrder(int orderId)
+    {
+        selectedOrder = orders.Orders.FirstOrDefault(o => o.Id == orderId);
+    }
+}

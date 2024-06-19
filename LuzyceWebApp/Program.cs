@@ -17,5 +17,6 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStat
 builder.Services.AddScoped<IUserAccount, AccountService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<OrderService>();
 
 await builder.Build().RunAsync();
