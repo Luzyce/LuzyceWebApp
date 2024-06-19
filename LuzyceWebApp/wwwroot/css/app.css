@@ -101,3 +101,7 @@ a, .btn-link {
 code {
     color: #c02d76;
 }
+
+.sidebar {
+    background-image: linear-gradient(180deg, rgb(155, 139, 103) 0%, #9f0647 70%) !important;
+}

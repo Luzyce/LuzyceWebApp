@@ -5,6 +5,12 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LuzyceWebApp", "LuzyceWebApp\LuzyceWebApp.csproj", "{CEF325A4-6163-41EE-99C5-26478F59C9B4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Folder", "Solution Folder", "{DB6405D4-962D-4949-98F6-31B49AD93EC2}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\DeployUAT.yml = .github\workflows\DeployUAT.yml
+		nginx.conf = nginx.conf
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
