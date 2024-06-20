@@ -15,30 +15,47 @@ else
                 @foreach (var order in orders.Orders)
                 {
                     <li class="list-group-item" @onclick="() => SelectOrder(order.Id)">
-                        @order.Number - @order.CustomerName
+                        @order.Number - @order.Date.ToString("dd.MM.yyyy")
+                        <br>
+                        <span style="font-size: 0.6em;">@order.CustomerName</span>
                     </li>
                 }
             </ul>
-            @if (orders.CurrentPage > 1)
-            {
-                <button class="btn btn-secondary" @onclick="() => LoadOrders(orders.CurrentPage - 1)">Previous</button>
-            }
-            @if (orders.CurrentPage < orders.TotalPages)
-            {
-                <button class="btn btn-secondary" @onclick="() => LoadOrders(orders.CurrentPage + 1)">Next</button>
-            }
+            <br>
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    <li class="page-item @(orders.CurrentPage > 1 ? "" : "disabled")">
+                        <a class="page-link"
+                            @onclick="@(async () => await LoadOrders(orders.CurrentPage - 1))">Poprzedni</a>
+                    </li>
+                    @for (int i = orders.CurrentPage - 2; i <= orders.CurrentPage + 2; i++)
+                    {
+                        if (i < 1 || i > orders.TotalPages)
+                        {
+                            continue;
+                        }
+                        var pageIndex = i;
+                        <li class="page-item @(orders.CurrentPage == pageIndex ? "active" : "")">
+                            <a class="page-link" @onclick="@(async () => await LoadOrders(pageIndex))">@pageIndex</a>
+                        </li>
+                    }
+                    <li class="page-item @(orders.CurrentPage < orders.TotalPages ? "" : "disabled")">
+                        <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage + 1))">Kolejny</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
         <div class="col-md-8">
             @if (selectedOrder != null)
             {
-                <h3>Order Items for @selectedOrder.Number</h3>
+                <h3>Pozycje dla @selectedOrder.Number</h3>
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Quantity in Stock</th>
-                            <th>Unit</th>
+                            <th>Towar</th>
+                            <th>Ilość</th>
+                            <th>Ilość w magazynie</th>
+                            <th>Jednostka</th>
                         </tr>
                     </thead>
                     <tbody>
