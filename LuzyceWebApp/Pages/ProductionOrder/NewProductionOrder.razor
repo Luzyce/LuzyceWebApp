@@ -1,6 +1,7 @@
 @page "/productionOrder/new"
 @using Luzyce.Core.Models.Order
 @using LuzyceWebApp.Services
+@using System.Reflection.Metadata
 @inject OrderService OrderService
 
 @if (orders == null)
@@ -9,24 +10,43 @@
 }
 else
 {
+    <style>
+        .order-row {
+            cursor: pointer;
+        }
+
+            .order-row:hover {
+                background-color: #f5f5f5;
+            }
+
+        .selected:hover {
+            background-color: pink;
+        }
+
+        .selected {
+            background-color: pink;
+        }
+    </style>
+
     <div class="row">
         <div class="col-md-4">
             <ul class="list-group">
                 @foreach (var order in orders.Orders)
                 {
-                    <li class="list-group-item" @onclick="() => SelectOrder(order.Id)">
+                    <li class="list-group-item order-row @(order.Id == selectedOrderId ? "selected" : "")" id="order(@order.Id)" @onclick="() => SelectOrder(order.Id)">
                         @order.Number - @order.Date.ToString("dd.MM.yyyy")
                         <br>
-                        <span style="font-size: 0.6em;">@order.CustomerName</span>
+                        <span style="font-size: 0.7em;">@order.CustomerName</span>
                     </li>
                 }
             </ul>
+
             <br>
             <nav aria-label="Page navigation">
-                <ul class="pagination">
+                <ul class="pagination" id="ordersul">
                     <li class="page-item @(orders.CurrentPage > 1 ? "" : "disabled")">
                         <a class="page-link"
-                            @onclick="@(async () => await LoadOrders(orders.CurrentPage - 1))">Poprzedni</a>
+                           @onclick="@(async () => await LoadOrders(orders.CurrentPage - 1))">Poprzedni</a>
                     </li>
                     @for (int i = orders.CurrentPage - 2; i <= orders.CurrentPage + 2; i++)
                     {
@@ -78,20 +98,24 @@ else
 @code {
     private GetOrdersResponseDto orders;
     private GetOrderResponseDto selectedOrder;
+    private int selectedOrderId;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadOrders(1);
     }
 
+    private void SelectOrder(int orderId)
+    {
+        selectedOrderId = orderId; // Set the currently selected order ID
+        selectedOrder = orders.Orders.FirstOrDefault(o => o.Id == orderId);
+        StateHasChanged();
+    }
+
+
     private async Task LoadOrders(int pageNumber)
     {
         orders = await OrderService.GetOrdersAsync(pageNumber);
         selectedOrder = null;
-    }
-
-    private void SelectOrder(int orderId)
-    {
-        selectedOrder = orders.Orders.FirstOrDefault(o => o.Id == orderId);
     }
 }
