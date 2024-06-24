@@ -10,30 +10,19 @@
 }
 else
 {
-    <style>
-        .order-row {
-            cursor: pointer;
-        }
-
-        .order-row:hover {
-            background-color: #f5f5f5;
-        }
-
-        .selected:hover {
-            background-color: pink;
-        }
-
-        .selected {
-            background-color: pink;
-        }
-    </style>
     <h3>Nowe zlecenie produkcji</h3>
     <div class="row">
         <div class="col form-group">
             <label>Nazwa klienta:</label>
-            <input type="text" class="form-control"  @bind="customerName" @oninput="@(async (e) => await OnCustomerNameInput(e))"/>
+            <input type="text" class="form-control"  @bind="customerName" @oninput="OnCustomerNameInput"/>
         </div>
-        <div class="col">
+        <div class="col form-group">
+            <label>Data początkowa:</label>
+            <input type="date" class="form-control" @bind="startDate" @oninput="OnStartDateInput"/>
+        </div>
+        <div class="col form-group">
+            <label>Data końcowa:</label>
+            <input type="date" class="form-control" @bind="endDate" @oninput="OnEndDateInput"/>
         </div>
     </div>
     <br>
@@ -52,7 +41,7 @@ else
 
             <br>
             <nav aria-label="Page navigation">
-                <ul class="pagination" id="ordersul">
+                <ul class="pagination" id="orderer">
                     <li class="page-item @(orders.CurrentPage > 1 ? "" : "disabled")">
                         <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage - 1))">Poprzedni</a>
                     </li>
@@ -82,7 +71,6 @@ else
                         <tr>
                             <th>Towar</th>
                             <th>Ilość</th>
-                            <th>Ilość w magazynie</th>
                             <th>Jednostka</th>
                         </tr>
                     </thead>
@@ -92,7 +80,6 @@ else
                             <tr>
                                 <td>@item.ProductName</td>
                                 <td>@item.Quantity</td>
-                                <td>@item.QuantityInStock</td>
                                 <td>@item.Unit</td>
                             </tr>
                         }
@@ -104,10 +91,12 @@ else
 }
 
 @code {
-    private GetOrdersResponseDto orders;
-    private GetOrderResponseDto selectedOrder;
-    private int selectedOrderId;
+    private GetOrdersResponseDto? orders;
+    private GetOrderResponseDto? selectedOrder;
     private string customerName = "";
+    private int selectedOrderId;
+    private DateTime? startDate;
+    private DateTime? endDate;
     private CancellationTokenSource cts = new CancellationTokenSource();
 
     protected override async Task OnInitializedAsync()
@@ -117,32 +106,48 @@ else
 
     private void SelectOrder(int orderId)
     {
-        selectedOrderId = orderId; // Set the currently selected order ID
-        selectedOrder = orders.Orders.FirstOrDefault(o => o.Id == orderId);
+        selectedOrderId = orderId;
+        selectedOrder = orders?.Orders.FirstOrDefault(o => o.Id == orderId);
         StateHasChanged();
     }
 
     private async Task LoadOrders(int pageNumber)
     {
-        cts.Cancel(); // Cancel the previous request
-        cts = new CancellationTokenSource(); // Create a new CancellationTokenSource
+        await cts.CancelAsync();
+        cts = new CancellationTokenSource();
         var token = cts.Token;
 
         try
         {
-            orders = await OrderService.GetOrdersAsync(pageNumber, customerName, token);
+            var getOrdersDto = new GetOrdersDto
+            {
+                CustomerName = customerName,
+                StartDate = startDate,
+                EndDate = endDate
+            };
+            orders = await OrderService.GetOrdersAsync(pageNumber, getOrdersDto, token);
             selectedOrder = null;
             StateHasChanged();
         }
         catch (OperationCanceledException)
-        {
-            // Ignore the operation canceled exception
-        }
+        {}
     }
 
     private async Task OnCustomerNameInput(ChangeEventArgs e)
     {
-        customerName = e.Value.ToString();
-        await LoadOrders(1);
+        customerName = e.Value?.ToString() ?? "";
+        await LoadOrders(pageNumber: 1);
+    }
+
+    private async Task OnStartDateInput(ChangeEventArgs e)
+    {
+        startDate = DateTime.Parse(e.Value?.ToString() ?? "");
+        await LoadOrders(pageNumber: 1);
+    }
+    
+    private async Task OnEndDateInput(ChangeEventArgs e)
+    {
+        endDate = DateTime.Parse(e.Value?.ToString() ?? "");
+        await LoadOrders(pageNumber: 1);
     }
 }

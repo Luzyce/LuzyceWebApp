@@ -1,21 +1,13 @@
 using System.Net.Http.Json;
 using Luzyce.Core.Models.Order;
-using System.Threading;
 
 namespace LuzyceWebApp.Services;
 
-public class OrderService
+public class OrderService(HttpClient httpClient)
 {
-    private readonly HttpClient _httpClient;
-
-    public OrderService(HttpClient httpClient)
+    public async Task<GetOrdersResponseDto> GetOrdersAsync(int pageNumber, GetOrdersDto getOrdersDto, CancellationToken cancellationToken)
     {
-        _httpClient = httpClient;
-    }
-
-    public async Task<GetOrdersResponseDto> GetOrdersAsync(int pageNumber, string customerName, CancellationToken cancellationToken)
-    {
-        var response = await _httpClient.PostAsJsonAsync($"/api/order/{pageNumber}", new { CustomerName = customerName }, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync($"/api/order/{pageNumber}", getOrdersDto, cancellationToken);
         return await response.Content.ReadFromJsonAsync<GetOrdersResponseDto>(cancellationToken) ?? new GetOrdersResponseDto();
     }
 }
