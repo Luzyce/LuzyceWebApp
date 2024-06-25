@@ -6,89 +6,91 @@
 
 @if (orders == null)
 {
-    <p><em>Loading...</em></p>
+    <p>
+        <em>Loading...</em>
+    </p>
+    return;
 }
-else
-{
-    <h3>Nowe zlecenie produkcji</h3>
-    <div class="row">
-        <div class="col form-group">
-            <label>Nazwa klienta:</label>
-            <input type="text" class="form-control"  @bind="customerName" @oninput="OnCustomerNameInput"/>
-        </div>
-        <div class="col form-group">
-            <label>Data początkowa:</label>
-            <input type="date" class="form-control" @bind="startDate" @oninput="OnStartDateInput"/>
-        </div>
-        <div class="col form-group">
-            <label>Data końcowa:</label>
-            <input type="date" class="form-control" @bind="endDate" @oninput="OnEndDateInput"/>
-        </div>
+
+<h3>Nowe zlecenie produkcji</h3>
+<div class="row">
+    <div class="col form-group">
+        <label>Nazwa klienta:</label>
+        <input type="text" class="form-control" @bind="customerName" @oninput="OnCustomerNameInput"/>
     </div>
-    <br>
-    <div class="row">
-        <div class="col-md-4">
-            <ul class="list-group">
-                @foreach (var order in orders.Orders)
+    <div class="col form-group">
+        <label>Data początkowa:</label>
+        <input type="date" class="form-control" @bind="startDate" @oninput="OnStartDateInput"/>
+    </div>
+    <div class="col form-group">
+        <label>Data końcowa:</label>
+        <input type="date" class="form-control" @bind="endDate" @oninput="OnEndDateInput"/>
+    </div>
+</div>
+<br>
+<div class="row">
+    <div class="col-md-4">
+        <ul class="list-group">
+            @foreach (var order in orders!.Orders)
+            {
+                <li class="list-group-item order-row @(order.Id == selectedOrderId ? "selected" : "")" id="order(@order.Id)" @onclick="() => SelectOrder(order.Id)">
+                    @order.Number - @order.Date.ToString("dd.MM.yyyy")
+                    <br>
+                    <span style="font-size: 0.7em;">@order.CustomerName</span>
+                </li>
+            }
+        </ul>
+
+        <br>
+        <nav aria-label="Page navigation">
+            <ul class="pagination" id="orderer">
+                <li class="page-item @(orders.CurrentPage > 1 ? "" : "disabled")">
+                    <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage - 1))">Poprzedni</a>
+                </li>
+                @for (int i = orders.CurrentPage - 2; i <= orders.CurrentPage + 2; i++)
                 {
-                    <li class="list-group-item order-row @(order.Id == selectedOrderId ? "selected" : "")" id="order(@order.Id)" @onclick="() => SelectOrder(order.Id)">
-                        @order.Number - @order.Date.ToString("dd.MM.yyyy")
-                        <br>
-                        <span style="font-size: 0.7em;">@order.CustomerName</span>
+                    if (i < 1 || i > orders.TotalPages)
+                    {
+                        continue;
+                    }
+
+                    var pageIndex = i;
+                    <li class="page-item @(orders.CurrentPage == pageIndex ? "active" : "")">
+                        <a class="page-link" @onclick="@(async () => await LoadOrders(pageIndex))">@pageIndex</a>
                     </li>
                 }
+                <li class="page-item @(orders.CurrentPage < orders.TotalPages ? "" : "disabled")">
+                    <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage + 1))">Kolejny</a>
+                </li>
             </ul>
-
-            <br>
-            <nav aria-label="Page navigation">
-                <ul class="pagination" id="orderer">
-                    <li class="page-item @(orders.CurrentPage > 1 ? "" : "disabled")">
-                        <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage - 1))">Poprzedni</a>
-                    </li>
-                    @for (int i = orders.CurrentPage - 2; i <= orders.CurrentPage + 2; i++)
-                    {
-                        if (i < 1 || i > orders.TotalPages)
-                        {
-                            continue;
-                        }
-                        var pageIndex = i;
-                        <li class="page-item @(orders.CurrentPage == pageIndex ? "active" : "")">
-                            <a class="page-link" @onclick="@(async () => await LoadOrders(pageIndex))">@pageIndex</a>
-                        </li>
-                    }
-                    <li class="page-item @(orders.CurrentPage < orders.TotalPages ? "" : "disabled")">
-                        <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage + 1))">Kolejny</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-        <div class="col-md-8">
-            @if (selectedOrder != null)
-            {
-                <h3>Pozycje dla @selectedOrder.Number</h3>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Towar</th>
-                            <th>Ilość</th>
-                            <th>Jednostka</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in selectedOrder.Items)
-                        {
-                            <tr>
-                                <td>@item.ProductName</td>
-                                <td>@item.Quantity</td>
-                                <td>@item.Unit</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-        </div>
+        </nav>
     </div>
-}
+    <div class="col-md-8">
+        @if (selectedOrder != null)
+        {
+            <h3>Pozycje dla @selectedOrder.Number</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Towar</th>
+                    <th>Ilość</th>
+                    <th>Jednostka</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in selectedOrder.Items)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Unit</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
 
 @code {
     private GetOrdersResponseDto? orders;
@@ -130,7 +132,8 @@ else
             StateHasChanged();
         }
         catch (OperationCanceledException)
-        {}
+        {
+        }
     }
 
     private async Task OnCustomerNameInput(ChangeEventArgs e)
@@ -144,10 +147,11 @@ else
         startDate = DateTime.Parse(e.Value?.ToString() ?? "");
         await LoadOrders(pageNumber: 1);
     }
-    
+
     private async Task OnEndDateInput(ChangeEventArgs e)
     {
         endDate = DateTime.Parse(e.Value?.ToString() ?? "");
         await LoadOrders(pageNumber: 1);
     }
+
 }

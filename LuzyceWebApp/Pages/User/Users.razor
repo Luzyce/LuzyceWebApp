@@ -2,45 +2,49 @@
 @using Luzyce.Core.Models.User
 @using LuzyceWebApp.Services
 @inject UserService UserService
-@inject NavigationManager NavManager
 
-@if (users == null || !users.Any())
+@if (users == null)
 {
-    <p><em>Ładowanie...</em></p>
+    <p>
+        <em>Ładowanie...</em>
+    </p>
+    return;
 }
-else
-{
-    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-        <a class="btn btn-primary" href="@($"users/new")">Nowy Uzytkownik</a>
-    </div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Imie</th>
-                <th>Nazwisko</th>
-                <th>Edycja</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in users)
-            {
-                <tr>
-                    <td>@user.Id</td>
-                    <td>@user.Name</td>
-                    <td>@user.LastName</td>
-                    <td><a class="btn btn-primary btn-sm" href="@($"users/edit/{user.Id}")">Edytuj</a></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <a class="btn btn-primary" href="@($"users/new")">Nowy Użytkownik</a>
+</div>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Imię</th>
+        <th>Nazwisko</th>
+        <th>Edycja</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in users)
+    {
+        <tr>
+            <td>@user.Id</td>
+            <td>@user.Name</td>
+            <td>@user.LastName</td>
+            <td>
+                <a class="btn btn-primary btn-sm" href="@($"users/edit/{user.Id}")">Edytuj</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
 
 @code {
-    private List<GetUserResponseDto> users = new List<GetUserResponseDto>();
+    private List<GetUserResponseDto>? users;
 
     protected override async Task OnInitializedAsync()
     {
         users = await UserService.GetUsersAsync();
     }
+
 }

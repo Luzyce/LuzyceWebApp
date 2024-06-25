@@ -5,9 +5,11 @@ namespace LuzyceWebApp.Services;
 
 public class OrderService(HttpClient httpClient)
 {
-    public async Task<GetOrdersResponseDto> GetOrdersAsync(int pageNumber, GetOrdersDto getOrdersDto, CancellationToken cancellationToken)
+    public async Task<GetOrdersResponseDto> GetOrdersAsync(int pageNumber, GetOrdersDto getOrdersDto,
+        CancellationToken cancellationToken)
     {
         var response = await httpClient.PostAsJsonAsync($"/api/order/{pageNumber}", getOrdersDto, cancellationToken);
-        return await response.Content.ReadFromJsonAsync<GetOrdersResponseDto>(cancellationToken) ?? new GetOrdersResponseDto();
+        return await response.Content.ReadFromJsonAsync<GetOrdersResponseDto>(cancellationToken) ??
+               new GetOrdersResponseDto();
     }
 }

@@ -1,17 +1,11 @@
 @page "/login"
 @inject AuthenticationStateProvider AuthStateProvider
-@inject NavigationManager NavManager
 @inject AccountService AccountService
+@inject NavigationManager NavManager
 
 @using LuzyceWebApp.Services
 @using Microsoft.AspNetCore.Components.Authorization
 @using Luzyce.Core.Models.User
-
-<style>
-    .card-pink {
-        background-color: rgb(247, 235, 237);
-    }
-</style>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -25,8 +19,8 @@
             <div class="card card-pink">
                 <div class="card-body">
                     <EditForm Model="User" OnValidSubmit="HandleLogin">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
+                        <DataAnnotationsValidator/>
+                        <ValidationSummary/>
 
                         <div class="form-group">
                             <label for="login">Login</label>
@@ -50,7 +44,7 @@
     public LoginDto User { get; set; } = new LoginDto { IpAddress = "127.0.0.1" };
     private bool showError;
     private string errorMessage = string.Empty;
-    
+
     async Task HandleLogin()
     {
         var resp = await AccountService.LoginAccount(User);
@@ -58,12 +52,11 @@
         {
             var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
             await customAuthStateProvider.UpdateAuthenticationState(resp.Token);
-            Console.WriteLine("test1" + resp.Token);
+            NavManager.NavigateTo("/");
         }
-        else
-        {
-            showError = true;
-            errorMessage = "Spróbuj ponownie.";
-        }
+        
+        showError = true;
+        errorMessage = "Spróbuj ponownie.";
     }
+
 }

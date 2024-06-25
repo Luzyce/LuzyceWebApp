@@ -6,62 +6,62 @@
 
 @if (user == null || roles == null)
 {
-    <p><em>Ładowanie...</em></p>
-}
-else
-{
-    <h1>Edytuj użytkownika</h1>
-    <form @onsubmit="HandleSubmit">
-        <div class="row">
-            <div class="col form-group">
-                <label>Imię:</label>
-                <input type="text" class="form-control" id="name" @bind="user.Name">
-            </div>
-            <div class="col form-group">
-                <label>Nazwisko:</label>
-                <input type="text" class="form-control" id="lastName" @bind="user.LastName">
-            </div>
-        </div>
-        <br>
-        <div class="row">
-            <div class="col form-group">
-                <label>Email:</label>
-                <input type="text" class="form-control" id="email" @bind="user.Email">
-            </div>
-            <div class="col form-group">
-                <label>Hash:</label>
-                <input type="text" class="form-control" id="hash" @bind="user.Hash">
-            </div>
-        </div>
-        <br>
-        <div class="row">
-            <div class="col form-group">
-                <label>Login:</label>
-                <input type="text" class="form-control" id="login" @bind="user.Login">
-            </div>
-            <div class="col form-group">
-                <label>Role:</label>
-                <select class="form-control" @bind="user.RoleId">
-                    @foreach (var role in roles)
-                    {
-                        <option value="@role.Id">@role.Name</option>
-                    }
-                </select>
-            </div>
-            <div class="col">
-                <br>
-                <a class="btn btn-primary" href="@($"users/resetPassword/{user.Id}")">Zresetuj Hasło</a>
-            </div>
-        </div>
-        <br>
-        <button type="submit" class="btn btn-primary">Zapisz</button>
-    </form>
+    <p>
+        <em>Ładowanie...</em>
+    </p>
+    return;
 }
 
+<h1>Edytuj użytkownika</h1>
+<form @onsubmit="HandleSubmit">
+    <div class="row">
+        <div class="col form-group">
+            <label>Imię:</label>
+            <input type="text" class="form-control" id="name" @bind="user!.Name">
+        </div>
+        <div class="col form-group">
+            <label>Nazwisko:</label>
+            <input type="text" class="form-control" id="lastName" @bind="user!.LastName">
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col form-group">
+            <label>Email:</label>
+            <input type="text" class="form-control" id="email" @bind="user!.Email">
+        </div>
+        <div class="col form-group">
+            <label>Hash:</label>
+            <input type="text" class="form-control" id="hash" @bind="user!.Hash">
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col form-group">
+            <label>Login:</label>
+            <input type="text" class="form-control" id="login" @bind="user!.Login">
+        </div>
+        <div class="col form-group">
+            <label>Role:</label>
+            <select class="form-control" @bind="user!.RoleId">
+                @foreach (var role in roles!)
+                {
+                    <option value="@role.Id">@role.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col">
+            <br>
+            <a class="btn btn-primary" href="@($"users/resetPassword/{user.Id}")">Zresetuj Hasło</a>
+        </div>
+    </div>
+    <br>
+    <button type="submit" class="btn btn-primary">Zapisz</button>
+</form>
+
 @code {
-    [Parameter]
-    public int userId { get; set; }
-    
+    [Parameter] public int userId { get; set; }
+
     private GetUserForUpdateDto? user;
     private List<GetRoleDto>? roles;
 
@@ -83,7 +83,7 @@ else
         {
             return;
         }
-        
+
         var userUpdate = new UpdateUserDto
         {
             Name = user.Name,
@@ -93,8 +93,9 @@ else
             Login = user.Login,
             RoleId = user.RoleId
         };
-        
+
         await UserService.UpdateUserAsync(userUpdate, userId);
         NavManager.NavigateTo("/users");
     }
+
 }

@@ -1,23 +1,20 @@
 ﻿using System.Net;
-using Blazored.LocalStorage;
 using Luzyce.Core.Models.User;
-using LuzyceWebApp.Pages;
 
 namespace LuzyceWebApp.Services;
 
-public class AccountService(HttpClient httpClient, ILocalStorageService localStorageService)
+public class AccountService(HttpClient httpClient)
     : IUserAccount
 {
     private const string BaseUrl = "/api/login";
-    private readonly ILocalStorageService localStorageService = localStorageService;
 
     public async Task<LoginResponseDto> LoginAccount(LoginDto loginDTO)
     {
         var response = await httpClient
-           .PostAsync(BaseUrl,
+            .PostAsync(BaseUrl,
                 CustomAuthenticationStateProvider
                     .GenerateStringContent(CustomAuthenticationStateProvider.SerializeObj(loginDTO)));
-        
+
         if (!response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Unauthorized)
         {
             return new LoginResponseDto()
@@ -26,9 +23,8 @@ public class AccountService(HttpClient httpClient, ILocalStorageService localSto
                 Token = ""
             };
         }
-        
+
         var apiResponse = await response.Content.ReadAsStringAsync();
         return CustomAuthenticationStateProvider.DeserializeJsonString<LoginResponseDto>(apiResponse);
-
     }
 }
