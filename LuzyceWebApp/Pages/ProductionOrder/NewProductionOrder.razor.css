@@ -13,3 +13,7 @@
 .selected {
     background-color: pink;
 }
+
+.narrow-input {
+    width: 85px;
+}

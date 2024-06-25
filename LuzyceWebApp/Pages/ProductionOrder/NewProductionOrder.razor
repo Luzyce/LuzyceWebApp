@@ -16,15 +16,15 @@
 <div class="row">
     <div class="col form-group">
         <label>Nazwa klienta:</label>
-        <input type="text" class="form-control" @bind="customerName" @oninput="OnCustomerNameInput"/>
+        <input type="text" class="form-control" @bind="customerName" @oninput="OnCustomerNameInput" disabled="@isAnyProductionOrderPositions"/>
     </div>
     <div class="col form-group">
         <label>Data początkowa:</label>
-        <input type="date" class="form-control" @bind="startDate" @oninput="OnStartDateInput"/>
+        <input type="date" class="form-control" @bind="startDate" @oninput="OnStartDateInput" disabled="@isAnyProductionOrderPositions"/>
     </div>
     <div class="col form-group">
         <label>Data końcowa:</label>
-        <input type="date" class="form-control" @bind="endDate" @oninput="OnEndDateInput"/>
+        <input type="date" class="form-control" @bind="endDate" @oninput="OnEndDateInput" disabled="@isAnyProductionOrderPositions"/>
     </div>
 </div>
 <br>
@@ -33,7 +33,10 @@
         <ul class="list-group">
             @foreach (var order in orders!.Orders)
             {
-                <li class="list-group-item order-row @(order.Id == selectedOrderId ? "selected" : "")" id="order(@order.Id)" @onclick="() => SelectOrder(order.Id)">
+                <li class="list-group-item order-row @(order.Id == selectedOrderId ? "selected" : "")" 
+                    id="order(@order.Id)" 
+                    @onclick="@(isAnyProductionOrderPositions ? () => {} : () => SelectOrder(order.Id))"
+                    style="cursor: @(isAnyProductionOrderPositions ? "not-allowed" : "pointer")">
                     @order.Number - @order.Date.ToString("dd.MM.yyyy")
                     <br>
                     <span style="font-size: 0.7em;">@order.CustomerName</span>
@@ -44,10 +47,10 @@
         <br>
         <nav aria-label="Page navigation">
             <ul class="pagination" id="orderer">
-                <li class="page-item @(orders.CurrentPage > 1 ? "" : "disabled")">
+                <li class="page-item @(orders.CurrentPage < 2 || isAnyProductionOrderPositions ? "disabled" : "")">
                     <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage - 1))">Poprzedni</a>
                 </li>
-                @for (int i = orders.CurrentPage - 2; i <= orders.CurrentPage + 2; i++)
+                @for (var i = orders.CurrentPage - 2; i <= orders.CurrentPage + 2; i++)
                 {
                     if (i < 1 || i > orders.TotalPages)
                     {
@@ -55,11 +58,11 @@
                     }
 
                     var pageIndex = i;
-                    <li class="page-item @(orders.CurrentPage == pageIndex ? "active" : "")">
+                    <li class="page-item @(orders.CurrentPage == pageIndex ? "active" : "") @(isAnyProductionOrderPositions ? "disabled" : "")">
                         <a class="page-link" @onclick="@(async () => await LoadOrders(pageIndex))">@pageIndex</a>
                     </li>
                 }
-                <li class="page-item @(orders.CurrentPage < orders.TotalPages ? "" : "disabled")">
+                <li class="page-item @(orders.CurrentPage > orders.TotalPages - 1 || isAnyProductionOrderPositions ? "disabled" : "")">
                     <a class="page-link" @onclick="@(async () => await LoadOrders(orders.CurrentPage + 1))">Kolejny</a>
                 </li>
             </ul>
@@ -74,7 +77,7 @@
                 <tr>
                     <th>Towar</th>
                     <th>Ilość</th>
-                    <th>Jednostka</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -82,8 +85,8 @@
                 {
                     <tr>
                         <td>@item.ProductName</td>
-                        <td>@item.Quantity</td>
-                        <td>@item.Unit</td>
+                        <td>@($"{item.Quantity:0}") @item.Unit</td>
+                        <td><input type="number" class="form-control narrow-input" min="0" value="0" @oninput="(e) => OnQuantityInput(item.Id, e)"/></td>
                     </tr>
                 }
                 </tbody>
@@ -99,6 +102,9 @@
     private int selectedOrderId;
     private DateTime? startDate;
     private DateTime? endDate;
+    private readonly Dictionary<int, int> ProductionOrderPositions = new Dictionary<int, int>();
+    private bool isAnyProductionOrderPositions;
+
     private CancellationTokenSource cts = new CancellationTokenSource();
 
     protected override async Task OnInitializedAsync()
@@ -154,4 +160,35 @@
         await LoadOrders(pageNumber: 1);
     }
 
+    private void OnQuantityInput(int itemId, ChangeEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
+        {
+            return;
+        }
+
+        var isValid = int.TryParse(e.Value?.ToString(), out var newQuantity);
+
+        if (isValid && newQuantity >= 0)
+        {
+            if (newQuantity != 0)
+            {
+                ProductionOrderPositions[itemId] = newQuantity;
+            }
+            else
+            {
+                ProductionOrderPositions.Remove(itemId);
+            }
+        }
+
+        isAnyProductionOrderPositions = ProductionOrderPositions.Values.Any(quantity => quantity != 0);
+
+        Console.WriteLine("ProductionOrderPositions:");
+        foreach (var position in ProductionOrderPositions)
+        {
+            Console.WriteLine($"ItemId: {position.Key}, Quantity: {position.Value}");
+        }
+
+        StateHasChanged();
+    }
 }
