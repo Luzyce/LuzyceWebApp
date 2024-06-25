@@ -48,17 +48,17 @@
 
 @code {
     public LoginDto User { get; set; } = new LoginDto { IpAddress = "127.0.0.1" };
-    private bool showError = false;
+    private bool showError;
     private string errorMessage = string.Empty;
-
+    
     async Task HandleLogin()
     {
         var resp = await AccountService.LoginAccount(User);
-        if (resp.Result is not null)
+        if (resp.Token != "")
         {
             var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
             await customAuthStateProvider.UpdateAuthenticationState(resp.Token);
-            NavManager.NavigateTo("/", forceLoad: true);
+            Console.WriteLine("test1" + resp.Token);
         }
         else
         {
