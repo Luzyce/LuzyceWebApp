@@ -1,4 +1,4 @@
-@page "/users/edit/{userId}"
+@page "/users/edit/{userId:int}"
 @using Luzyce.Core.Models.User
 @using LuzyceWebApp.Services
 @inject UserService UserService
@@ -50,7 +50,7 @@ else
             </div>
             <div class="col">
                 <br>
-                <a class="btn btn-primary" href="@($"users/resetpassword/{user.Id}")">Zresetuj Hasło</a>
+                <a class="btn btn-primary" href="@($"users/resetPassword/{user.Id}")">Zresetuj Hasło</a>
             </div>
         </div>
         <br>
@@ -60,34 +60,31 @@ else
 
 @code {
     [Parameter]
-    public string userId
-    {
-        get { return uId.ToString(); }
-        set
-        {
-            int.TryParse(value, out uId);
-        }
-    }
-
-    public int uId = -1;
-    private GetUserForUpdateDto user = new GetUserForUpdateDto();
-    private List<GetRoleDto> roles = new List<GetRoleDto>();
+    public int userId { get; set; }
+    
+    private GetUserForUpdateDto? user;
+    private List<GetRoleDto>? roles;
 
     protected override async Task OnInitializedAsync()
     {
-        if (uId < 1)
+        if (userId < 1)
         {
             NavManager.NavigateTo("/users");
             return;
         }
 
-        user = await UserService.GetUserByIdAsync(uId);
+        user = await UserService.GetUserByIdAsync(userId);
         roles = await UserService.GetRolesAsync();
     }
 
     private async Task HandleSubmit()
     {
-        UpdateUserDto userUpdate = new UpdateUserDto
+        if (user == null)
+        {
+            return;
+        }
+        
+        var userUpdate = new UpdateUserDto
         {
             Name = user.Name,
             LastName = user.LastName,
@@ -96,7 +93,8 @@ else
             Login = user.Login,
             RoleId = user.RoleId
         };
-        await UserService.UpdateUserAsync(userUpdate, uId);
+        
+        await UserService.UpdateUserAsync(userUpdate, userId);
         NavManager.NavigateTo("/users");
     }
 }
