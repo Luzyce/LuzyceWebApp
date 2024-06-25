@@ -17,3 +17,7 @@
 .narrow-input {
     width: 85px;
 }
+
+.btn-right {
+    float: right;
+}
