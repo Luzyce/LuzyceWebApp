@@ -32,7 +32,7 @@ public class UserService(HttpClient httpClient, ILocalStorageService localStorag
 
     public async Task<List<GetRoleDto>> GetRolesAsync()
     {
-        return await httpClient.GetFromJsonAsync<List<GetRoleDto>>("api/user/roles") ?? new List<GetRoleDto>();
+        return await httpClient.GetFromJsonAsync<List<GetRoleDto>>("api/user/roles") ?? [];
     }
 
     public async Task ResetPasswordAsync(int userId, UpdatePasswordDto newPassword)
