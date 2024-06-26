@@ -1,6 +1,8 @@
 @page "/productionOrder/new"
+@using System.Text.RegularExpressions
 @using System.Threading
 @using Luzyce.Core.Models.Order
+@using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
 @inject OrderService OrderService
 
@@ -98,7 +100,7 @@
         }
         <div class="btn-right">
             <button class="btn btn-secondary" @onclick="OnReset" disabled="@(!isAnyProductionOrderPositions)">Zresetuj</button>
-            <button class="btn btn-primary" disabled="@(!isAnyProductionOrderPositions)">Zapisz</button>
+            <button class="btn btn-primary" @onclick="OnSave" disabled="@(!isAnyProductionOrderPositions)">Zapisz</button>
         </div>
     </div>
 </div>
@@ -112,6 +114,7 @@
     private DateTime? endDate;
     private readonly Dictionary<int, int> ProductionOrderPositions = new Dictionary<int, int>();
     private bool isAnyProductionOrderPositions;
+    private List<GetProductionOrderPositionDto>? productionOrderPositionsDto;
 
     private CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -211,6 +214,29 @@
 
         isAnyProductionOrderPositions = false;
         StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnSave()
+    {
+        productionOrderPositionsDto = selectedOrder!.Items
+            .Where(item => ProductionOrderPositions.ContainsKey(item.Id))
+            .GroupBy(item => Regex.Match(item.Symbol, @"^[A-Z]{2}\d{4}").Value)
+            .Select(group => new GetProductionOrderPositionDto
+            {
+                DocumentId = selectedOrderId,
+                Symbol = group.Key,
+                Gross = group.Sum(item => (int)item.Quantity),
+                Net = group.Sum(item => ProductionOrderPositions[item.Id])
+            })
+            .ToList();
+    
+        Console.WriteLine("ProductionOrderPositionsDto:");
+        foreach (var position in productionOrderPositionsDto)
+        {
+            Console.WriteLine($"DocumentId: {position.DocumentId}, Symbol: {position.Symbol}, Gross: {position.Gross}, Net: {position.Net}");
+        }
+
         return Task.CompletedTask;
     }
 }
