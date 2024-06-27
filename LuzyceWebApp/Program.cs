@@ -4,7 +4,6 @@ using LuzyceWebApp;
 using LuzyceWebApp.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
-using LuzyceWebApp.Pages;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -14,9 +13,9 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https:/
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
-builder.Services.AddScoped<IUserAccount, AccountService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<TokenValidationService>();
 
 await builder.Build().RunAsync();

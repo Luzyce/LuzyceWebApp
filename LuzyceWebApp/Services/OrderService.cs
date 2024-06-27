@@ -1,24 +1,19 @@
 using System.Net;
 using System.Net.Http.Json;
-using Blazored.LocalStorage;
 using Luzyce.Core.Models.Order;
 using Luzyce.Core.Models.ProductionOrder;
 
 namespace LuzyceWebApp.Services;
 
-public class OrderService(HttpClient httpClient, ILocalStorageService localStorageService)
+public class OrderService(HttpClient httpClient, TokenValidationService tokenValidationService)
 {
-    public async Task<GetOrdersResponseDto> GetOrdersAsync(int pageNumber, GetOrdersDto getOrdersDto,
+    public async Task<GetOrdersResponseDto?> GetOrdersAsync(int pageNumber, GetOrdersDto getOrdersDto,
         CancellationToken cancellationToken)
     {
-        var token = await localStorageService.GetItemAsStringAsync("token", cancellationToken);
-        if (string.IsNullOrWhiteSpace(token))
+        if (!await tokenValidationService.IsTokenValid())
         {
-            throw new HttpRequestException("Token is missing");
+            return null;
         }
-
-        httpClient.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
         var response = await httpClient.PostAsJsonAsync($"/api/order/{pageNumber}", getOrdersDto, cancellationToken);
         return await response.Content.ReadFromJsonAsync<GetOrdersResponseDto>(cancellationToken) ??
                new GetOrdersResponseDto();
@@ -26,6 +21,10 @@ public class OrderService(HttpClient httpClient, ILocalStorageService localStora
     
     public async Task<bool> CreateOrderAsync(CreateProductionOrderDto createProductionOrderDto)
     {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return false;
+        }
         var response = await httpClient.PostAsJsonAsync("/api/productionOrder/new", createProductionOrderDto);
         return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
     }

@@ -1,47 +1,62 @@
 using System.Net.Http.Json;
-using Blazored.LocalStorage;
 using Luzyce.Core.Models.User;
 
 namespace LuzyceWebApp.Services;
 
-public class UserService(HttpClient httpClient, ILocalStorageService localStorageService)
+public class UserService(HttpClient httpClient, TokenValidationService tokenValidationService)
 {
-    public async Task<List<GetUserResponseDto>> GetUsersAsync()
+    public async Task<List<GetUserResponseDto>?> GetUsersAsync()
     {
-        var token = await localStorageService.GetItemAsStringAsync("token");
-        if (string.IsNullOrWhiteSpace(token))
+        if (!await tokenValidationService.IsTokenValid())
         {
-            throw new HttpRequestException("Token is missing");
+            return null;
         }
-
-        httpClient.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        return await httpClient.GetFromJsonAsync<List<GetUserResponseDto>>("/api/user") ??
-               new List<GetUserResponseDto>();
+        return await httpClient.GetFromJsonAsync<List<GetUserResponseDto>>($"/api/user") ??
+               [];
     }
 
-    public async Task<GetUserForUpdateDto> GetUserByIdAsync(int id)
+    public async Task<GetUserForUpdateDto?> GetUserByIdAsync(int id)
     {
-        return await httpClient.GetFromJsonAsync<GetUserForUpdateDto>($"api/user/{id}") ?? new GetUserForUpdateDto();
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return null;
+        }
+        return await httpClient.GetFromJsonAsync<GetUserForUpdateDto>("api/user/{id}") ?? new GetUserForUpdateDto();
     }
 
     public async Task UpdateUserAsync(UpdateUserDto user, int id)
     {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return;
+        }
         await httpClient.PutAsJsonAsync($"api/user/{id}", user);
     }
 
-    public async Task<List<GetRoleDto>> GetRolesAsync()
+    public async Task<List<GetRoleDto>?> GetRolesAsync()
     {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return null;
+        }
         return await httpClient.GetFromJsonAsync<List<GetRoleDto>>("api/user/roles") ?? [];
     }
 
     public async Task ResetPasswordAsync(int userId, UpdatePasswordDto newPassword)
     {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return;
+        }
         await httpClient.PutAsJsonAsync($"api/user/{userId}/password", newPassword);
     }
 
     public async Task CreateUserAsync(CreateUserDto user)
     {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return;
+        }
         await httpClient.PostAsJsonAsync("/api/user", user);
     }
 }

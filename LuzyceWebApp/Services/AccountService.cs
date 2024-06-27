@@ -4,14 +4,11 @@ using Luzyce.Core.Models.User;
 namespace LuzyceWebApp.Services;
 
 public class AccountService(HttpClient httpClient)
-    : IUserAccount
 {
-    private const string BaseUrl = "/api/login";
-
     public async Task<LoginResponseDto> LoginAccount(LoginDto loginDTO)
     {
         var response = await httpClient
-            .PostAsync(BaseUrl,
+            .PostAsync("/api/login",
                 CustomAuthenticationStateProvider
                     .GenerateStringContent(CustomAuthenticationStateProvider.SerializeObj(loginDTO)));
 
