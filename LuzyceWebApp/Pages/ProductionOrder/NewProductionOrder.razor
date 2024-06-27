@@ -84,15 +84,15 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var item in selectedOrder.Items)
+                @foreach (var position in selectedOrder.Positions)
                 {
                     <tr>
-                        <td>@item.ProductName</td>
-                        <td>@($"{item.Quantity:0}") @item.Unit</td>
+                        <td>@position.ProductName</td>
+                        <td>@($"{position.Quantity:0}") @position.Unit</td>
                         <td>
                             <input type="number" class="form-control narrow-input" min="0"
-                                   value="@ProductionOrderPositions.GetValueOrDefault(item.Id, 0)"
-                                   @oninput="(e) => OnQuantityInput(item.Id, e)" />
+                                   value="@ProductionOrderPositions.GetValueOrDefault(position.Id, 0)"
+                                   @oninput="(e) => OnQuantityInput(position.Id, e)" />
                         </td>
                     </tr>
                 }
@@ -172,7 +172,7 @@
         await LoadOrders(pageNumber: 1);
     }
 
-    private void OnQuantityInput(int itemId, ChangeEventArgs e)
+    private void OnQuantityInput(int positionId, ChangeEventArgs e)
     {
         if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
         {
@@ -185,11 +185,11 @@
         {
             if (newQuantity != 0)
             {
-                ProductionOrderPositions[itemId] = newQuantity;
+                ProductionOrderPositions[positionId] = newQuantity;
             }
             else
             {
-                ProductionOrderPositions.Remove(itemId);
+                ProductionOrderPositions.Remove(positionId);
             }
         }
 
@@ -198,7 +198,7 @@
         Console.WriteLine("ProductionOrderPositions:");
         foreach (var position in ProductionOrderPositions)
         {
-            Console.WriteLine($"ItemId: {position.Key}, Quantity: {position.Value}");
+            Console.WriteLine($"PositionId: {position.Key}, Quantity: {position.Value}");
         }
 
         StateHasChanged();
@@ -208,9 +208,9 @@
     {
         ProductionOrderPositions.Clear();
 
-        foreach (var item in selectedOrder?.Items ?? Enumerable.Empty<GetOrderItemResponseDto>())
+        foreach (var position in selectedOrder?.Positions ?? Enumerable.Empty<GetOrderPositionResponseDto>())
         {
-            ProductionOrderPositions[item.Id] = 0;
+            ProductionOrderPositions[position.Id] = 0;
         }
 
         isAnyProductionOrderPositions = false;
@@ -223,14 +223,14 @@
         productionOrderDto = new CreateProductionOrderDto
         {
             Order = selectedOrder!,
-            ProductionOrderPositions = selectedOrder!.Items
-                .Where(item => ProductionOrderPositions.ContainsKey(item.Id))
-                .Select(item => new GetProductionOrderPositionDto
+            ProductionOrderPositions = selectedOrder!.Positions
+                .Where(position => ProductionOrderPositions.ContainsKey(position.Id))
+                .Select(position => new GetProductionOrderPositionDto
                 {
-                    DocumentItemId = item.Id,
-                    Symbol = Regex.Match(item.Symbol, @"^[A-Z]{2}\d{4}").Value,
-                    Gross = (int)item.Quantity,
-                    Net = ProductionOrderPositions[item.Id]
+                    DocumentPositionId = position.Id,
+                    Symbol = Regex.Match(position.Symbol, @"^[A-Z]{2}\d{4}").Value,
+                    Gross = (int)position.Quantity,
+                    Net = ProductionOrderPositions[position.Id]
                 })
                 .ToList()
         };
