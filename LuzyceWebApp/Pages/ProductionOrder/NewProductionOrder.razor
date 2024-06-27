@@ -227,7 +227,7 @@
                 .Where(item => ProductionOrderPositions.ContainsKey(item.Id))
                 .Select(item => new GetProductionOrderPositionDto
                 {
-                    DocumentId = selectedOrderId,
+                    DocumentItemId = item.Id,
                     Symbol = Regex.Match(item.Symbol, @"^[A-Z]{2}\d{4}").Value,
                     Gross = (int)item.Quantity,
                     Net = ProductionOrderPositions[item.Id]
