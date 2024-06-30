@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Luzyce.Core.Models.Lampshade;
 using Luzyce.Core.Models.Order;
 using Luzyce.Core.Models.ProductionOrder;
 
@@ -27,5 +28,15 @@ public class OrderService(HttpClient httpClient, TokenValidationService tokenVal
         }
         var response = await httpClient.PostAsJsonAsync("/api/productionOrder/new", createProductionOrderDto);
         return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
+    }
+    
+    public async Task<GetVariantsResponseDto?> GetVariantsAsync()
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return new GetVariantsResponseDto();
+        }
+        var response = await httpClient.GetAsync("api/lampshade/variants");
+        return await response.Content.ReadFromJsonAsync<GetVariantsResponseDto>();
     }
 }

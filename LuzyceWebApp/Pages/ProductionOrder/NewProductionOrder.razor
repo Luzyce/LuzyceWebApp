@@ -1,6 +1,7 @@
 @page "/productionOrder/new"
 @using System.Text.RegularExpressions
 @using System.Threading
+@using Luzyce.Core.Models.Lampshade
 @using Luzyce.Core.Models.Order
 @using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
@@ -78,7 +79,11 @@
             <table class="table">
                 <thead>
                 <tr>
+                    <th>Symbol pełny</th>
                     <th>Towar</th>
+                    <th>Symbol</th>
+                    <th>Wariant</th>
+                    <th>Dekor</th>
                     <th>Ilość</th>
                     <th></th>
                 </tr>
@@ -87,12 +92,46 @@
                 @foreach (var position in selectedOrder.Positions)
                 {
                     <tr>
+                        <td>@position.Symbol</td>
                         <td>@position.ProductName</td>
+                        @{
+                            var regexMatch = Regex.Match(position.Symbol, @"^[A-Z]{2}\-?\d[^\-\/\ ]{2,}");
+                            var isRegexMatch = regexMatch.Success;
+                            var matchedValue = regexMatch.Value;
+
+                            int? lastMatchingVariantId = null;
+
+                            if (isRegexMatch)
+                            {
+                                foreach (var variant in variants!.Variants)
+                                {
+                                    if (position.Symbol.Contains(variant.ShortName))
+                                    {
+                                        lastMatchingVariantId = variant.Id;
+                                    }
+                                }
+                            }
+                        }
+                        <td>
+                            <input type="text" class="form-control symbol-input" value="@matchedValue" />
+                        </td>
+                        <td>
+                            <select class="form-control">
+                                <option value="" disabled selected></option>
+                                @foreach (var variant in variants!.Variants)
+                                {
+                                <option value="@variant.Id" selected="@(isRegexMatch && variant.Id == lastMatchingVariantId ? "selected" : null)">@variant.Name</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control symbol-input "/>
+                        </td>
                         <td>@($"{position.Quantity:0}") @position.Unit</td>
                         <td>
                             <input type="number" class="form-control narrow-input" min="0"
                                    value="@ProductionOrderPositions.GetValueOrDefault(position.Id, 0)"
-                                   @oninput="(e) => OnQuantityInput(position.Id, e)" />
+                                   @oninput="(e) => OnQuantityInput(position.Id, e)"/>
                         </td>
                     </tr>
                 }
@@ -116,12 +155,14 @@
     private readonly Dictionary<int, int> ProductionOrderPositions = new Dictionary<int, int>();
     private bool isAnyProductionOrderPositions;
     private CreateProductionOrderDto? productionOrderDto;
-
+    private GetVariantsResponseDto? variants; 
+    
     private CancellationTokenSource cts = new CancellationTokenSource();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadOrders(1);
+        variants = await OrderService.GetVariantsAsync();
     }
 
     private void SelectOrder(int orderId)
