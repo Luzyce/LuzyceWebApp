@@ -91,49 +91,32 @@
                 <tbody>
                 @foreach (var position in selectedOrder.Positions)
                 {
-                    <tr>
-                        <td>@position.Symbol</td>
-                        <td>@position.ProductName</td>
-                        @{
-                            var regexMatch = Regex.Match(position.Symbol, @"^[A-Z]{2}\-?\d[^\-\/\ ]{2,}");
-                            var isRegexMatch = regexMatch.Success;
-                            var matchedValue = regexMatch.Value;
-
-                            int? lastMatchingVariantId = null;
-
-                            if (isRegexMatch)
+                var (matchedValue, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
+                <tr>
+                    <td>@position.Symbol</td>
+                    <td>@position.ProductName</td>
+                    <td>
+                        <input type="text" class="form-control symbol-input" value="@matchedValue" />
+                    </td>
+                    <td>
+                        <select class="form-control">
+                            <option value="" disabled selected></option>
+                            @foreach (var variant in variants!.Variants)
                             {
-                                foreach (var variant in variants!.Variants)
-                                {
-                                    if (position.Symbol.Contains(variant.ShortName))
-                                    {
-                                        lastMatchingVariantId = variant.Id;
-                                    }
-                                }
+                            <option value="@variant.Id" selected="@(variant.Id == lastMatchingVariantId ? "selected" : null)">@variant.Name</option>
                             }
-                        }
-                        <td>
-                            <input type="text" class="form-control symbol-input" value="@matchedValue" />
-                        </td>
-                        <td>
-                            <select class="form-control">
-                                <option value="" disabled selected></option>
-                                @foreach (var variant in variants!.Variants)
-                                {
-                                <option value="@variant.Id" selected="@(isRegexMatch && variant.Id == lastMatchingVariantId ? "selected" : null)">@variant.Name</option>
-                                }
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" class="form-control symbol-input "/>
-                        </td>
-                        <td>@($"{position.Quantity:0}") @position.Unit</td>
-                        <td>
-                            <input type="number" class="form-control narrow-input" min="0"
-                                   value="@ProductionOrderPositions.GetValueOrDefault(position.Id, 0)"
-                                   @oninput="(e) => OnQuantityInput(position.Id, e)"/>
-                        </td>
-                    </tr>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control symbol-input" value="@(dekor)"/>
+                    </td>
+                    <td>@($"{position.Quantity:0}") @position.Unit</td>
+                    <td>
+                        <input type="number" class="form-control narrow-input" min="0"
+                               value="@ProductionOrderPositions.GetValueOrDefault(position.Id, 0)"
+                               @oninput="(e) => OnQuantityInput(position.Id, e)"/>
+                    </td>
+                </tr>
                 }
                 </tbody>
             </table>
@@ -284,5 +267,39 @@
         {
             Console.WriteLine("Error");
         }
+    }
+    
+    private (string matchedValue, int? lastMatchingVariantId, string dekor) GetMatchingVariantInfo(string symbol)
+    {
+        var regexMatch = Regex.Match(symbol, @"^[A-Z]{2}\-?\d[^\-\/\ ]{2,}");
+        var matchedValue = regexMatch.Value;
+        int? lastMatchingVariantId = null;
+        string? dekor = null;
+
+        if (regexMatch.Success)
+        {
+            lastMatchingVariantId = variants!.Variants
+                .Where(variant => symbol.Contains(variant.ShortName))
+                .Select(variant => variant.Id)
+                .LastOrDefault();
+        
+            if (lastMatchingVariantId != null)
+            {
+                var matchingVariant = variants.Variants
+                    .FirstOrDefault(v => v.Id == lastMatchingVariantId);
+
+                if (matchingVariant != null)
+                {
+                    dekor = symbol.Replace($"{matchedValue}-{matchingVariant.ShortName}", "").TrimStart('-');
+                }
+            }
+        }
+
+        if (dekor == matchedValue)
+        {
+            dekor = string.Empty;
+        }
+
+        return (matchedValue, lastMatchingVariantId, dekor ?? string.Empty);
     }
 }
