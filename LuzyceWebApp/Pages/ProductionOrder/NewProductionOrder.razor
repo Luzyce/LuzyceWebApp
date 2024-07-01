@@ -92,23 +92,26 @@
                 @foreach (var position in selectedOrder.Positions)
                 {
                 var (matchedValue, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
+                VariantIds[position.Id] = lastMatchingVariantId ?? 0;
+                Dekors[position.Id] = dekor;
+
                 <tr>
                     <td>@position.Symbol</td>
                     <td>@position.ProductName</td>
                     <td>
-                        <input type="text" class="form-control symbol-input" value="@matchedValue" />
+                        <input type="text" class="form-control symbol-input" @bind="matchedValue" />
                     </td>
                     <td>
-                        <select class="form-control">
+                        <select class="form-control" @bind="VariantIds[position.Id]">
                             <option value="" disabled selected></option>
                             @foreach (var variant in variants!.Variants)
                             {
-                            <option value="@variant.Id" selected="@(variant.Id == lastMatchingVariantId ? "selected" : null)">@variant.Name</option>
+                            <option value="@variant.Id">@variant.Name</option>
                             }
                         </select>
                     </td>
                     <td>
-                        <input type="text" class="form-control symbol-input" value="@(dekor)"/>
+                        <input type="text" class="form-control symbol-input" @bind="Dekors[position.Id]"/>
                     </td>
                     <td>@($"{position.Quantity:0}") @position.Unit</td>
                     <td>
@@ -138,7 +141,10 @@
     private readonly Dictionary<int, int> ProductionOrderPositions = new Dictionary<int, int>();
     private bool isAnyProductionOrderPositions;
     private CreateProductionOrderDto? productionOrderDto;
-    private GetVariantsResponseDto? variants; 
+    private GetVariantsResponseDto? variants;
+    private Dictionary<int, int> VariantIds = new();
+    private Dictionary<int, string> Dekors = new();
+
     
     private CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -253,6 +259,8 @@
                 {
                     DocumentPositionId = position.Id,
                     Symbol = Regex.Match(position.Symbol, @"^[A-Z]{2}\d{4}").Value,
+                    VariantId = VariantIds[position.Id],
+                    Dekor = Dekors[position.Id],
                     Gross = (int)position.Quantity,
                     Net = ProductionOrderPositions[position.Id]
                 })
