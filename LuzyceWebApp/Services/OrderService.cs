@@ -20,7 +20,7 @@ public class OrderService(HttpClient httpClient, TokenValidationService tokenVal
                new GetOrdersResponseDto();
     }
     
-    public async Task<bool> CreateOrderAsync(CreateProductionOrderDto createProductionOrderDto)
+    public async Task<bool> CreateOrderAsync(CreateProductionOrderRequest createProductionOrderDto)
     {
         if (!await tokenValidationService.IsTokenValid())
         {

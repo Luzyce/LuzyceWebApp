@@ -151,7 +151,7 @@
     private DateTime? endDate;
     private readonly Dictionary<int, int> ProductionOrderPositions = new Dictionary<int, int>();
     private bool isAnyProductionOrderPositions;
-    private CreateProductionOrderDto? productionOrderDto;
+    private CreateProductionOrderRequest? productionOrderDto;
     private GetVariantsResponseDto? variants;
     private Dictionary<int, int> variantIds = new();
     private Dictionary<int, string> dekors = new();
@@ -286,12 +286,12 @@
 
     private async Task OnSave()
     {
-        productionOrderDto = new CreateProductionOrderDto
+        productionOrderDto = new CreateProductionOrderRequest
         {
             Order = selectedOrder!,
             ProductionOrderPositions = selectedOrder!.Positions
                 .Where(position => ProductionOrderPositions.ContainsKey(position.Id))
-                .Select(position => new GetProductionOrderPositionDto
+                .Select(position => new CreateProductionOrder
                 {
                     DocumentPositionId = position.Id,
                     Symbol = Regex.Match(position.Symbol, @"^[A-Z]{2}\d{4}").Value,

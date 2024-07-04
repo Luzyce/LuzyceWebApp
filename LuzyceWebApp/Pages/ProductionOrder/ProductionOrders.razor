@@ -1,0 +1,47 @@
+﻿@page "/productionOrders"
+@using Luzyce.Core.Models.ProductionOrder
+@using LuzyceWebApp.Services
+@inject ProductionOrderService ProductionOrderService
+
+@if (productionOrders == null)
+{
+<p>
+    <em>Ładowanie...</em>
+</p>
+return;
+}
+
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <a class="btn btn-primary" href="@($"productionOrder/new")">Nowy Zlecenie Produkcji</a>
+</div>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Numer</th>
+        <th>Edycja</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var productionOrder in productionOrders.ProductionOrders)
+    {
+    <tr>
+        <td>@productionOrder.Id</td>
+        <td>@productionOrder.Number</td>
+        <td>
+            <a class="btn btn-primary btn-sm" href="@($"productionOrder/edit/{productionOrder.Id}")">Edytuj</a>
+        </td>
+    </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private GetProductionOrdersResponse? productionOrders;
+
+    protected override async Task OnInitializedAsync()
+    {
+       productionOrders = await ProductionOrderService.GetProductionOrdersResponse();
+    }
+}
