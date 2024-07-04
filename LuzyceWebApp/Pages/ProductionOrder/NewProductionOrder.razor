@@ -85,7 +85,7 @@
                     <th>Wariant</th>
                     <th>Dekor</th>
                     <th>Ilość</th>
-                    <th>Ilość w magazynie</th>
+                    <th>Na mag.</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -120,9 +120,10 @@
                     </td>
                     <td>@($"{position.Quantity:0}") @position.Unit</td>
                     <td>
+                        
                         @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
                         {
-                            @productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity
+                            <a type="button" class="btn" data-bs-toggle="modal" data-bs-target="#exampleModal">@productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity</a>
                         }
                     </td>
                     <td>
@@ -138,6 +139,24 @@
         <div class="btn-right">
             <button class="btn btn-secondary" @onclick="OnReset" disabled="@(!isAnyProductionOrderPositions)">Zresetuj</button>
             <button class="btn btn-primary" @onclick="OnSave" disabled="@(!isAnyProductionOrderPositions)">Zapisz</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -298,7 +317,8 @@
                     VariantId = variantIds[position.Id],
                     Dekor = dekors[position.Id],
                     Gross = (int)position.Quantity,
-                    Net = ProductionOrderPositions[position.Id]
+                    Net = ProductionOrderPositions[position.Id],
+                    SubiektProductId = position.ProductId
                 })
                 .ToList()
         };

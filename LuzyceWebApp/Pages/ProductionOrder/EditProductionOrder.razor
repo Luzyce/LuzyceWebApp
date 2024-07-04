@@ -1,8 +1,10 @@
 ﻿@page "/productionOrder/edit/{prodOrderId:int}"
+@using Luzyce.Core.Models.Order
 @using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
 @inject NavigationManager NavManager
 @inject ProductionOrderService ProductionOrderService
+@inject OrderService OrderService
 
 @if (prodOrder == null)
 {
@@ -12,46 +14,72 @@
     return;
 }
 
-<h1>Edycja @prodOrder!.Number</h1>
+<h2>Edycja Zlecenia Produkcyjnego: @prodOrder!.Number</h2>
 <form @onsubmit="HandleSubmit">
-    <details>
-        <summary>
-            <a style="font-size: 20px; font-weight: bold;">Pozycje zamówienia</a>
-        </summary>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Towar</th>
+            <th>Na zam.</th>
+            <th>Na mag.</th>
+            <th>Ilość</th>
+            <th>Ilość zmian</th>
+            <th>Ilość na zmianę</th>
+            <th>Data wykonania</th>
+            <th>Ilość wykonana</th>
+            <th>Uwagi</th>
+            <th>Sposób pakowania</th>
+            <th>Po ile pakowane</th>
+        </tr>
+        </thead>
         @foreach (var position in prodOrder.Positions!)
         {
-            <div class="row">
-                <h5>Pozycja @(prodOrder.Positions.IndexOf(position) + 1):</h5>
-                <div class="col form-group">
-                    <label>Ilosć Netto:</label>
-                    <input type="number" class="form-control" @bind="position.QuantityNetto">
-                </div>
-                <div class="col form-group">
-                    <label>Ilość w zamówieniu:</label>
-                    <input type="number" class="form-control" @bind="position.QuantityGross" readonly>
-                </div>
-                <div class="col form-group">
-                    <label>Klosz:</label>
-                    <input type="text" class="form-control" @bind="position.Lampshade.Code" readonly>
-                </div>
-                <div class="col form-group">
-                    <label>Norma Klosza:</label>
-                    <input type="text" class="form-control" @bind="position.LampshadeNorm.Variant.Name" readonly>
-                </div>
-                <div class="col form-group">
-                    <label>Dekor Klosza:</label>
-                    <input type="text" class="form-control" @bind="position.LampshadeDekor" readonly>
-                </div>
-            </div>
-            <br>
+            <tr>
+                <td>
+                    @position.Lampshade.Code @position.LampshadeNorm.Variant.Name @position.LampshadeDekor
+                </td>
+                <td>
+                    @position.QuantityGross
+                </td>
+                <td>
+                    @productWarehousesStocks[prodOrder.Positions.IndexOf(position)].Quantity
+                </td>
+                <td>
+                    <input type="number" class="form-control form-small" @bind="position.QuantityNetto">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-small" @bind="position.NumberOfChanges">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-small" @bind="position.LampshadeNorm.QuantityPerChange">
+                </td>
+                <td>
+                    <input type="date" class="form-control form-small" @bind="position.ExecutionDate">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-small" @bind="position.QuantityMade">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-small" @bind="position.Remarks">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-small" @bind="position.MethodOfPackaging">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-small" @bind="position.QuantityPerPack">
+                </td>
+            </tr>
         }
-    </details>
+    </table>
     <button type="submit" class="btn btn-primary">Zapisz</button>
 </form>
+
 @code {
     [Parameter] public int prodOrderId { get; set; }
+    
     private GetProductionOrder? prodOrder;
-
+    private List<ProductWarehouseStocks> productWarehousesStocks = [];
+    
     protected override async Task OnInitializedAsync()
     {
         if (prodOrderId < 1)
@@ -59,7 +87,12 @@
             NavManager.NavigateTo("/productionOrders");
             return;
         }
+
         prodOrder = await ProductionOrderService.GetProductionOrder(prodOrderId);
+        if (prodOrder != null)
+        {
+            await LoadWarehouseQuantities();
+        }
     }
 
     private async Task HandleSubmit()
@@ -68,18 +101,50 @@
         {
             return;
         }
-
-        // var prodOrderUpdate = new UpdateProductionOrderDto
-        // {
-        //     DocNumber = prodOrder.DocNumber,
-        //     Year = prodOrder.Year,
-        //     Number = prodOrder.Number,
-        //     CreatedAt = prodOrder.CreatedAt,
-        //     UpdatedAt = prodOrder.UpdatedAt,
-        //     ClosedAt = prodOrder.ClosedAt
-        // };
-        //
-        // await ProductionOrderService.UpdateProductionOrderAsync(prodOrderUpdate, prodOrderId);
-        NavManager.NavigateTo("/productionOrders");
+        
+        var updateProductionOrder = new UpdateProductionOrder
+        {
+            Positions = prodOrder.Positions!.Select(position => new UpdateProductionOrderPosition
+            {
+                Id = position.Id,
+                QuantityNetto = position.QuantityNetto,
+                NumberOfChanges = position.NumberOfChanges,
+                QuantityPerChange = position.LampshadeNorm.QuantityPerChange,
+                ExecutionDate = position.ExecutionDate,
+                QuantityMade = position.QuantityMade,
+                Remarks = position.Remarks,
+                MethodOfPackaging = position.MethodOfPackaging,
+                QuantityPerPack = position.QuantityPerPack
+            }).ToList()
+        };
+        
+        var resp = await ProductionOrderService.UpdateProductionOrderAsync(prodOrderId, updateProductionOrder);
+        
+        if (resp)
+        {
+            NavManager.NavigateTo("/productionOrders");
+        }
     }
+    
+    private async Task LoadWarehouseQuantities()
+    {
+        var productIds = prodOrder!.Positions!.Select(p => p.ProductId).ToList();
+        var stockRequest = new StockRequest
+        {
+            ProductIds = productIds,
+            WarehouseIds = [1, 7, 8, 9, 11, 12]
+        };
+        var stockResponse = await OrderService.GetStockAsync(stockRequest);
+        if (stockResponse != null)
+        {
+            productWarehousesStocks = stockResponse.ProductWarehousesStocks;
+
+            Console.WriteLine("productWarehousesStocks:");
+            foreach (var productWarehouseStock in productWarehousesStocks)
+            {
+                Console.WriteLine($"ProductId: {productWarehouseStock.ProductId}, Quantity: {productWarehouseStock.Quantity}");
+            }
+        }
+    }
+
 }
