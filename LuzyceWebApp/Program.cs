@@ -9,7 +9,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri("https://phsapp.getin.ovh/") });
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri("http://localhost:5132/") });
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();

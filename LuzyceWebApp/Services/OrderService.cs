@@ -39,4 +39,14 @@ public class OrderService(HttpClient httpClient, TokenValidationService tokenVal
         var response = await httpClient.GetAsync("api/lampshade/variants");
         return await response.Content.ReadFromJsonAsync<GetVariantsResponseDto>();
     }
+    
+    public async Task<StockResponse?> GetStockAsync(StockRequest stockRequest)
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return new StockResponse();
+        }
+        var response = await httpClient.PostAsJsonAsync("api/order/stock", stockRequest);
+        return await response.Content.ReadFromJsonAsync<StockResponse>();
+    }
 }

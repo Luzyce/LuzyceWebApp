@@ -79,30 +79,33 @@
             <table class="table">
                 <thead>
                 <tr>
-                    <th>Symbol pełny</th>
                     <th>Towar</th>
-                    <th>Symbol</th>
+                    <th>Klosz</th>
                     <th>Wariant</th>
                     <th>Dekor</th>
                     <th>Ilość</th>
+                    <th>Ilość w magazynie</th>
                     <th></th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach (var position in selectedOrder.Positions)
                 {
-                var (matchedValue, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
-                VariantIds[position.Id] = lastMatchingVariantId ?? 0;
-                Dekors[position.Id] = dekor;
+                var (klosz, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
+                variantIds[position.Id] = lastMatchingVariantId ?? 0;
+                dekors[position.Id] = dekor;
 
                 <tr>
-                    <td>@position.Symbol</td>
-                    <td>@position.ProductName</td>
+                    <td>@position.Symbol @position.ProductName</td>
                     <td>
-                        <input type="text" class="form-control symbol-input" @bind="matchedValue" />
+                        <input type="text" class="form-control symbol-input"
+                               value="@klosz"
+                               @oninput="(e) => OnKloszChanged(position.Id, e)" />
                     </td>
                     <td>
-                        <select class="form-control" @bind="VariantIds[position.Id]">
+                        <select class="form-control wariant-input"
+                                value="@variantIds[position.Id]"
+                                @onchange="(e) => OnVariantChanged(position.Id, e)">
                             <option value="" disabled selected></option>
                             @foreach (var variant in variants!.Variants)
                             {
@@ -111,9 +114,17 @@
                         </select>
                     </td>
                     <td>
-                        <input type="text" class="form-control symbol-input" @bind="Dekors[position.Id]"/>
+                        <input type="text" class="form-control symbol-input"
+                               value="@dekors[position.Id]"
+                               @oninput="(e) => OnDekorChanged(position.Id, e)" />
                     </td>
                     <td>@($"{position.Quantity:0}") @position.Unit</td>
+                    <td>
+                        @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
+                        {
+                            @productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity
+                        }
+                    </td>
                     <td>
                         <input type="number" class="form-control narrow-input" min="0"
                                value="@ProductionOrderPositions.GetValueOrDefault(position.Id, 0)"
@@ -142,9 +153,9 @@
     private bool isAnyProductionOrderPositions;
     private CreateProductionOrderDto? productionOrderDto;
     private GetVariantsResponseDto? variants;
-    private Dictionary<int, int> VariantIds = new();
-    private Dictionary<int, string> Dekors = new();
-
+    private Dictionary<int, int> variantIds = new();
+    private Dictionary<int, string> dekors = new();
+    private List<ProductWarehouseStocks> productWarehousesStocks = [];
     
     private CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -154,10 +165,14 @@
         variants = await OrderService.GetVariantsAsync();
     }
 
-    private void SelectOrder(int orderId)
+    private async Task SelectOrder(int orderId)
     {
         selectedOrderId = orderId;
         selectedOrder = orders?.Orders.FirstOrDefault(o => o.Id == orderId);
+        if (selectedOrder != null)
+        {
+            await LoadWarehouseQuantities(selectedOrder);
+        }
         StateHasChanged();
     }
 
@@ -181,6 +196,27 @@
         }
         catch (OperationCanceledException)
         {
+        }
+    }
+
+    private async Task LoadWarehouseQuantities(GetOrderResponseDto order)
+    {
+        var productIds = order.Positions.Select(p => p.ProductId).ToList();
+        var stockRequest = new StockRequest
+        {
+            ProductIds = productIds,
+            WarehouseIds = [1, 7, 8, 9, 11, 12]
+        };
+        var stockResponse = await OrderService.GetStockAsync(stockRequest);
+        if (stockResponse != null)
+        {
+            productWarehousesStocks = stockResponse.ProductWarehousesStocks;
+
+            Console.WriteLine("productWarehousesStocks:");
+            foreach (var productWarehouseStock in productWarehousesStocks)
+            {
+                Console.WriteLine($"ProductId: {productWarehouseStock.ProductId}, Quantity: {productWarehouseStock.Quantity}");
+            }
         }
     }
 
@@ -259,8 +295,8 @@
                 {
                     DocumentPositionId = position.Id,
                     Symbol = Regex.Match(position.Symbol, @"^[A-Z]{2}\d{4}").Value,
-                    VariantId = VariantIds[position.Id],
-                    Dekor = Dekors[position.Id],
+                    VariantId = variantIds[position.Id],
+                    Dekor = dekors[position.Id],
                     Gross = (int)position.Quantity,
                     Net = ProductionOrderPositions[position.Id]
                 })
@@ -277,10 +313,10 @@
         }
     }
     
-    private (string matchedValue, int? lastMatchingVariantId, string dekor) GetMatchingVariantInfo(string symbol)
+    private (string klosz, int? lastMatchingVariantId, string dekor) GetMatchingVariantInfo(string symbol)
     {
         var regexMatch = Regex.Match(symbol, @"^[A-Z]{2}\-?\d[^\-\/\ ]{2,}");
-        var matchedValue = regexMatch.Value;
+        var klosz = regexMatch.Value;
         int? lastMatchingVariantId = null;
         string? dekor = null;
 
@@ -298,16 +334,38 @@
 
                 if (matchingVariant != null)
                 {
-                    dekor = symbol.Replace($"{matchedValue}-{matchingVariant.ShortName}", "").TrimStart('-');
+                    dekor = symbol.Replace($"{klosz}-{matchingVariant.ShortName}", "").TrimStart('-');
                 }
             }
         }
 
-        if (dekor == matchedValue)
+        if (dekor == klosz)
         {
             dekor = string.Empty;
         }
 
-        return (matchedValue, lastMatchingVariantId, dekor ?? string.Empty);
+        return (klosz, lastMatchingVariantId, dekor ?? string.Empty);
+    }
+    
+    private void OnKloszChanged(int positionId, ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString() ?? "";
+        StateHasChanged();
+    }
+
+    private void OnVariantChanged(int positionId, ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var newVariantId))
+        {
+            variantIds[positionId] = newVariantId;
+        }
+        StateHasChanged();
+    }
+
+    private void OnDekorChanged(int positionId, ChangeEventArgs e)
+    {
+        var newDekor = e.Value?.ToString() ?? "";
+        dekors[positionId] = newDekor;
+        StateHasChanged();
     }
 }

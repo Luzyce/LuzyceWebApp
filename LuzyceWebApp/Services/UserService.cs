@@ -21,7 +21,7 @@ public class UserService(HttpClient httpClient, TokenValidationService tokenVali
         {
             return null;
         }
-        return await httpClient.GetFromJsonAsync<GetUserForUpdateDto>("api/user/{id}") ?? new GetUserForUpdateDto();
+        return await httpClient.GetFromJsonAsync<GetUserForUpdateDto>($"api/user/{id}") ?? new GetUserForUpdateDto();
     }
 
     public async Task UpdateUserAsync(UpdateUserDto user, int id)
