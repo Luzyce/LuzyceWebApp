@@ -6,6 +6,7 @@
 @using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
 @inject OrderService OrderService
+@inject ProductionOrderService ProductionOrderService
 @inject NavigationManager NavigationManager
 
 @if (orders == null)
@@ -39,7 +40,7 @@
             {
                 <li class="list-group-item order-row @(order.Id == selectedOrderId ? "selected" : "")"
                     id="order(@order.Id)"
-                    @onclick="@(isAnyProductionOrderPositions ? () => { } : () => SelectOrder(order.Id))"
+                    @onclick="@(isAnyProductionOrderPositions ? () => { } : () => _ = SelectOrder(order.Id))"
                     style="cursor: @(isAnyProductionOrderPositions ? "not-allowed" : "pointer")">
                     @order.Number - @order.Date.ToString("dd.MM.yyyy")
                     <br>
@@ -99,8 +100,7 @@
                     <td>@position.Symbol @position.ProductName</td>
                     <td>
                         <input type="text" class="form-control symbol-input"
-                               value="@klosz"
-                               @oninput="(e) => OnKloszChanged(position.Id, e)" />
+                               value="@klosz" />
                     </td>
                     <td>
                         <select class="form-control wariant-input"
@@ -153,8 +153,8 @@
     private bool isAnyProductionOrderPositions;
     private CreateProductionOrderRequest? productionOrderDto;
     private GetVariantsResponseDto? variants;
-    private Dictionary<int, int> variantIds = new();
-    private Dictionary<int, string> dekors = new();
+    private readonly Dictionary<int, int> variantIds = new();
+    private readonly Dictionary<int, string> dekors = new();
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
     
     private CancellationTokenSource cts = new CancellationTokenSource();
@@ -303,7 +303,7 @@
                 .ToList()
         };
 
-        if (await OrderService.CreateOrderAsync(productionOrderDto))
+        if (await ProductionOrderService.CreateProductionOrderAsync(productionOrderDto))
         {
             NavigationManager.NavigateTo("/");
         }
@@ -345,12 +345,6 @@
         }
 
         return (klosz, lastMatchingVariantId, dekor ?? string.Empty);
-    }
-    
-    private void OnKloszChanged(int positionId, ChangeEventArgs e)
-    {
-        var newValue = e.Value?.ToString() ?? "";
-        StateHasChanged();
     }
 
     private void OnVariantChanged(int positionId, ChangeEventArgs e)

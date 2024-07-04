@@ -12,7 +12,7 @@ return;
 }
 
 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-    <a class="btn btn-primary" href="@($"productionOrder/new")">Nowy Zlecenie Produkcji</a>
+    <a class="btn btn-primary" href="@($"productionOrder/new")">Nowe Zlecenie Produkcji</a>
 </div>
 
 <table class="table">
@@ -42,6 +42,6 @@ return;
 
     protected override async Task OnInitializedAsync()
     {
-       productionOrders = await ProductionOrderService.GetProductionOrdersResponse();
+       productionOrders = await ProductionOrderService.GetProductionOrders();
     }
 }

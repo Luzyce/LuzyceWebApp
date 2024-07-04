@@ -1,0 +1,85 @@
+﻿@page "/productionOrder/edit/{prodOrderId:int}"
+@using Luzyce.Core.Models.ProductionOrder
+@using LuzyceWebApp.Services
+@inject NavigationManager NavManager
+@inject ProductionOrderService ProductionOrderService
+
+@if (prodOrder == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+    return;
+}
+
+<h1>Edycja @prodOrder!.Number</h1>
+<form @onsubmit="HandleSubmit">
+    <details>
+        <summary>
+            <a style="font-size: 20px; font-weight: bold;">Pozycje zamówienia</a>
+        </summary>
+        @foreach (var position in prodOrder.Positions!)
+        {
+            <div class="row">
+                <h5>Pozycja @(prodOrder.Positions.IndexOf(position) + 1):</h5>
+                <div class="col form-group">
+                    <label>Ilosć Netto:</label>
+                    <input type="number" class="form-control" @bind="position.QuantityNetto">
+                </div>
+                <div class="col form-group">
+                    <label>Ilość w zamówieniu:</label>
+                    <input type="number" class="form-control" @bind="position.QuantityGross" readonly>
+                </div>
+                <div class="col form-group">
+                    <label>Klosz:</label>
+                    <input type="text" class="form-control" @bind="position.Lampshade.Code" readonly>
+                </div>
+                <div class="col form-group">
+                    <label>Norma Klosza:</label>
+                    <input type="text" class="form-control" @bind="position.LampshadeNorm.Variant.Name" readonly>
+                </div>
+                <div class="col form-group">
+                    <label>Dekor Klosza:</label>
+                    <input type="text" class="form-control" @bind="position.LampshadeDekor" readonly>
+                </div>
+            </div>
+            <br>
+        }
+    </details>
+    <button type="submit" class="btn btn-primary">Zapisz</button>
+</form>
+@code {
+    [Parameter] public int prodOrderId { get; set; }
+    private GetProductionOrder? prodOrder;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (prodOrderId < 1)
+        {
+            NavManager.NavigateTo("/productionOrders");
+            return;
+        }
+        prodOrder = await ProductionOrderService.GetProductionOrder(prodOrderId);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (prodOrder == null)
+        {
+            return;
+        }
+
+        // var prodOrderUpdate = new UpdateProductionOrderDto
+        // {
+        //     DocNumber = prodOrder.DocNumber,
+        //     Year = prodOrder.Year,
+        //     Number = prodOrder.Number,
+        //     CreatedAt = prodOrder.CreatedAt,
+        //     UpdatedAt = prodOrder.UpdatedAt,
+        //     ClosedAt = prodOrder.ClosedAt
+        // };
+        //
+        // await ProductionOrderService.UpdateProductionOrderAsync(prodOrderUpdate, prodOrderId);
+        NavManager.NavigateTo("/productionOrders");
+    }
+}

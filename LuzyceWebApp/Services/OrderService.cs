@@ -20,16 +20,6 @@ public class OrderService(HttpClient httpClient, TokenValidationService tokenVal
                new GetOrdersResponseDto();
     }
     
-    public async Task<bool> CreateOrderAsync(CreateProductionOrderRequest createProductionOrderDto)
-    {
-        if (!await tokenValidationService.IsTokenValid())
-        {
-            return false;
-        }
-        var response = await httpClient.PostAsJsonAsync("/api/productionOrder/new", createProductionOrderDto);
-        return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
-    }
-    
     public async Task<GetVariantsResponseDto?> GetVariantsAsync()
     {
         if (!await tokenValidationService.IsTokenValid())
