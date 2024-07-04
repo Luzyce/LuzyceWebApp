@@ -123,7 +123,7 @@
                         
                         @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
                         {
-                            <a type="button" class="btn" data-bs-toggle="modal" data-bs-target="#exampleModal">@productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity</a>
+                            <a type="button" class="btn" @onclick="() => ShowStockModal(productWarehousesStocks[position.OrderPositionLp.Value - 1], position.Unit!)">@productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity @position.Unit</a>
                         }
                     </td>
                     <td>
@@ -142,24 +142,44 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                <h1 class="modal-title fs-5" id="stockModalLabel">Stany magazynowe</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                ...
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Magazyn</th>
+                        <th>Ilość</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var ws in selectedProductWarehouseStock.WarehouseStocks)
+                    {
+                        <tr>
+                            <td>@ws.WarehouseSymbol</td>
+                            <td style="text-align: right;">@ws.Quantity @selectedUnit</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+<script>
+    const stockModal = new bootstrap.Modal('#stockModal', {
+        keyboard: false
+    })
+    
+    function showStockModal() {
+        stockModal.show();
+    }
+</script>
 
 @code {
     private GetOrdersResponseDto? orders;
@@ -175,6 +195,8 @@
     private readonly Dictionary<int, int> variantIds = new();
     private readonly Dictionary<int, string> dekors = new();
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
+    private ProductWarehouseStocks selectedProductWarehouseStock = new();
+    private string selectedUnit = string.Empty;
     
     private CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -382,4 +404,15 @@
         dekors[positionId] = newDekor;
         StateHasChanged();
     }
+    
+    [Inject] IJSRuntime JS { get; set; }
+    
+    private Task ShowStockModal(ProductWarehouseStocks productWarehousesStock, string unit)
+    {
+        selectedProductWarehouseStock = productWarehousesStock;   
+        selectedUnit = unit;
+        JS.InvokeVoidAsync("showStockModal");
+        return Task.CompletedTask;
+    }
+
 }
