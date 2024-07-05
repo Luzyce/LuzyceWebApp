@@ -97,7 +97,7 @@
                 dekors[position.Id] = dekor;
 
                 <tr>
-                    <td>@position.Symbol @position.ProductName</td>
+                    <td><div style="width: 300px;">@position.Symbol @position.ProductName</div></td>
                     <td>
                         <input type="text" class="form-control symbol-input"
                                value="@klosz" />
@@ -120,10 +120,9 @@
                     </td>
                     <td>@($"{position.Quantity:0}") @position.Unit</td>
                     <td>
-                        
                         @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
                         {
-                            <a type="button" class="btn" @onclick="() => ShowStockModal(productWarehousesStocks[position.OrderPositionLp.Value - 1], position.Unit!)">@productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity @position.Unit</a>
+                            <a type="button" class="btn" @onclick="() => quantitiesInStockComponent.ShowStockModal(productWarehousesStocks[position.OrderPositionLp.Value - 1], position.Unit!)">@productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity @position.Unit</a>
                         }
                     </td>
                     <td>
@@ -142,44 +141,8 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="stockModalLabel">Stany magazynowe</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>Magazyn</th>
-                        <th>Ilość</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @foreach (var ws in selectedProductWarehouseStock.WarehouseStocks)
-                    {
-                        <tr>
-                            <td>@ws.WarehouseSymbol</td>
-                            <td style="text-align: right;">@ws.Quantity @selectedUnit</td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-    const stockModal = new bootstrap.Modal('#stockModal', {
-        keyboard: false
-    })
-    
-    function showStockModal() {
-        stockModal.show();
-    }
-</script>
+
+<QuantitiesInStock @ref="quantitiesInStockComponent" />
 
 @code {
     private GetOrdersResponseDto? orders;
@@ -195,8 +158,7 @@
     private readonly Dictionary<int, int> variantIds = new();
     private readonly Dictionary<int, string> dekors = new();
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
-    private ProductWarehouseStocks selectedProductWarehouseStock = new();
-    private string selectedUnit = string.Empty;
+    private QuantitiesInStock quantitiesInStockComponent;
     
     private CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -403,16 +365,6 @@
         var newDekor = e.Value?.ToString() ?? "";
         dekors[positionId] = newDekor;
         StateHasChanged();
-    }
-    
-    [Inject] IJSRuntime JS { get; set; }
-    
-    private Task ShowStockModal(ProductWarehouseStocks productWarehousesStock, string unit)
-    {
-        selectedProductWarehouseStock = productWarehousesStock;   
-        selectedUnit = unit;
-        JS.InvokeVoidAsync("showStockModal");
-        return Task.CompletedTask;
     }
 
 }

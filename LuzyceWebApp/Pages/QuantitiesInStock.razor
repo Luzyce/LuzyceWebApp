@@ -1,0 +1,57 @@
+﻿@using Luzyce.Core.Models
+@using Luzyce.Core.Models.Order
+@inject IJSRuntime JS
+
+<div class="modal fade" id="stockModal" tabindex="-1" aria-labelledby="stockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="stockModalLabel">Stany magazynowe</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Magazyn</th>
+                        <th>Ilość</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var ws in selectedProductWarehouseStock.WarehouseStocks)
+                    {
+                        <tr>
+                            <td>@ws.WarehouseName</td>
+                            <td style="text-align: right;">@ws.Quantity @selectedUnit</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const stockModal = new bootstrap.Modal('#stockModal', {
+        keyboard: false
+    })
+
+    function showStockModal() {
+        stockModal.show();
+    }
+</script>
+
+@code {
+    private ProductWarehouseStocks selectedProductWarehouseStock = new ProductWarehouseStocks();
+    private string selectedUnit = string.Empty;
+
+    public async Task ShowStockModal(ProductWarehouseStocks productWarehousesStock, string unit)
+    {
+        selectedProductWarehouseStock = productWarehousesStock;
+        selectedUnit = unit;
+        await JS.InvokeVoidAsync("showStockModal");
+        StateHasChanged();
+    }
+
+}

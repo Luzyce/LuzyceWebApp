@@ -38,11 +38,11 @@
                 <td>
                     @position.Lampshade.Code @position.LampshadeNorm.Variant.Name @position.LampshadeDekor
                 </td>
-                <td>
-                    @position.QuantityGross
+                <td class="div" style="text-align: right;">
+                    @position.QuantityGross @position.Unit
                 </td>
-                <td>
-                    @productWarehousesStocks[prodOrder.Positions.IndexOf(position)].Quantity
+                <td class="div" style="text-align: right;">
+                    <a type="button" class="btn" @onclick="() => quantitiesInStockComponent.ShowStockModal(productWarehousesStocks[prodOrder.Positions.IndexOf(position)], unit)">@productWarehousesStocks[prodOrder.Positions.IndexOf(position)].Quantity @position.Unit</a>
                 </td>
                 <td>
                     <input type="number" class="form-control form-small" @bind="position.QuantityNetto">
@@ -51,7 +51,7 @@
                     <input type="number" class="form-control form-small" @bind="position.NumberOfChanges">
                 </td>
                 <td>
-                    <input type="number" class="form-control form-small" @bind="position.LampshadeNorm.QuantityPerChange">
+                    <input type="number" class="form-control form-small" value="@position.LampshadeNorm.QuantityPerChange" @oninput="@(e => UpdateQuantityPerChange(position.LampshadeNorm.Id, e.Value!.ToString()!))">
                 </td>
                 <td>
                     <input type="date" class="form-control form-small" @bind="position.ExecutionDate">
@@ -76,10 +76,12 @@
 
 @code {
     [Parameter] public int prodOrderId { get; set; }
-    
+
     private GetProductionOrder? prodOrder;
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
-    
+    private QuantitiesInStock quantitiesInStockComponent;
+    private const string unit = "szt.";
+
     protected override async Task OnInitializedAsync()
     {
         if (prodOrderId < 1)
@@ -101,7 +103,7 @@
         {
             return;
         }
-        
+
         var updateProductionOrder = new UpdateProductionOrder
         {
             Positions = prodOrder.Positions!.Select(position => new UpdateProductionOrderPosition
@@ -117,15 +119,15 @@
                 QuantityPerPack = position.QuantityPerPack
             }).ToList()
         };
-        
+
         var resp = await ProductionOrderService.UpdateProductionOrderAsync(prodOrderId, updateProductionOrder);
-        
+
         if (resp)
         {
             NavManager.NavigateTo("/productionOrders");
         }
     }
-    
+
     private async Task LoadWarehouseQuantities()
     {
         var productIds = prodOrder!.Positions!.Select(p => p.ProductId).ToList();
@@ -144,6 +146,16 @@
             {
                 Console.WriteLine($"ProductId: {productWarehouseStock.ProductId}, Quantity: {productWarehouseStock.Quantity}");
             }
+        }
+    }
+
+    private void UpdateQuantityPerChange(int lampshadeNormId, string newValue)
+    {
+        if (!int.TryParse(newValue, out var newQuantityPerChange)) return;
+
+        foreach (var position in prodOrder!.Positions!.Where(position => position.LampshadeNorm.Id == lampshadeNormId))
+        {
+            position.LampshadeNorm.QuantityPerChange = newQuantityPerChange;
         }
     }
 
