@@ -1,0 +1,68 @@
+﻿@page "/productionPriority/new"
+@using Luzyce.Core.Models.ProductionOrder
+@using LuzyceWebApp.Services
+@using Microsoft.FluentUI.AspNetCore.Components
+@inject ProdPrioritiesService ProdPrioritiesService
+
+@if (getOrdersPositionsResponse == null)
+{
+<p>
+    <em>Loading...</em>
+</p>
+return;
+}
+
+<ul class="list-group">
+    <FluentGrid Justify="JustifyContent.FlexStart" Spacing="3">
+        <FluentGridItem xs="12" sm="6">
+            <FluentSortableList Items="getOrdersPositionsResponse.OrdersPositions" OnUpdate="@SortList">
+                <ItemTemplate>
+                    <li class="list-group-item">@context.Lampshade.Code @context.LampshadeNorm.Variant.Name @context.LampshadeDekor <h6 style="float: right">@context.ProductionOrderNumber</h6></li>
+                </ItemTemplate>
+            </FluentSortableList>
+        </FluentGridItem>
+    </FluentGrid>
+</ul>
+
+@code {
+    public class OrderPositionItem
+    {
+        public int Id { get; set; }
+        public string LampshadeCode { get; set; } = "";
+    }
+
+    private GetOrdersPositionsResponse? getOrdersPositionsResponse = new GetOrdersPositionsResponse();
+
+    protected override async Task OnInitializedAsync()
+    {
+        getOrdersPositionsResponse = await ProdPrioritiesService.GetOrdersPositions();
+        
+    }
+
+    private void SortList(FluentSortableListEventArgs args)
+    {
+        if (args.OldIndex == args.NewIndex || getOrdersPositionsResponse == null)
+        {
+            return;
+        }
+
+        var oldIndex = args.OldIndex;
+        var newIndex = args.NewIndex;
+
+        var itemToMove = getOrdersPositionsResponse.OrdersPositions[oldIndex];
+        getOrdersPositionsResponse.OrdersPositions.RemoveAt(oldIndex);
+
+        if (newIndex < getOrdersPositionsResponse.OrdersPositions.Count)
+        {
+            getOrdersPositionsResponse.OrdersPositions.Insert(newIndex, itemToMove);
+        }
+        else
+        {
+            getOrdersPositionsResponse.OrdersPositions.Add(itemToMove);
+        }
+        foreach (var item in getOrdersPositionsResponse.OrdersPositions)
+        {
+            Console.WriteLine(item.Id);
+        }
+    }
+}
