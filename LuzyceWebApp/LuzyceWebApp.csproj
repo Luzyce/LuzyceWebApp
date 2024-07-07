@@ -11,6 +11,7 @@
         <Content Include="Dockerfile"/>
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="Append.Blazor.Printing" Version="6.3.0" />
         <PackageReference Include="Blazored.LocalStorage" Version="4.5.0"/>
         <PackageReference Include="Luzyce.Core" Version="7.0.9" />
         <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.0"/>

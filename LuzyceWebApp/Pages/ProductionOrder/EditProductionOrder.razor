@@ -2,6 +2,8 @@
 @using Luzyce.Core.Models.Order
 @using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
+@using Append.Blazor.Printing
+@inject IPrintingService PrintingService
 @inject NavigationManager NavManager
 @inject ProductionOrderService ProductionOrderService
 @inject OrderService OrderService
@@ -72,7 +74,12 @@
         }
     </table>
     <button type="submit" class="btn btn-primary">Zapisz</button>
+    <button type="button" class="btn btn-secondary" @onclick="@(()=> PrintingService.Print("http://localhost:5132/api/productionOrder/zlecenieProdukcji-" + prodOrder.Id + ".pdf"))">
+        Wydrukuj
+    </button>
 </form>
+
+<QuantitiesInStock @ref="quantitiesInStockComponent" />
 
 @code {
     [Parameter] public int prodOrderId { get; set; }
