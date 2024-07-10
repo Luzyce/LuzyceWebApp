@@ -1,9 +1,10 @@
 ﻿@page "/productionPriority/new"
 @using Luzyce.Core.Models.ProductionOrder
+@using Luzyce.Core.Models.ProductionPriority
 @using LuzyceWebApp.Services
-@using Microsoft.FluentUI.AspNetCore.Components
 @inject ProdPrioritiesService ProdPrioritiesService
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 @if (getOrdersPositionsResponse == null)
 {
@@ -51,10 +52,7 @@
             new Sortable(tableBody, {
                 animation: 150,
                 onEnd: (evt) => {
-                    const sortedIds = [...evt.to.rows].map(row => parseInt(row.dataset.id));
-
-                    // const sortedIds = [...tableBody.querySelectorAll('tr')].map(row => parseInt(row.getAttribute('data-id')));
-                    dotNetHelper.invokeMethodAsync('SortList', sortedIds);
+                    dotNetHelper.invokeMethodAsync('SortList', [...evt.to.rows].map(row => parseInt(row.dataset.id)));
                 }
             });
         }
@@ -63,7 +61,7 @@
 
 @code {
     private GetOrdersPositionsResponse? getOrdersPositionsResponse;
-    private SortedList<int, GetProductionOrderPosition> sortedList = new();
+    private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();
     protected override async Task OnInitializedAsync()
     {
         getOrdersPositionsResponse = await ProdPrioritiesService.GetOrdersPositions();
@@ -91,18 +89,20 @@
                 sortedList.Add(i * 10, item);
             }
         }
-
-        foreach (var item in sortedList.Values)
-        {
-            Console.WriteLine(item.Id);
-        }
+        
         await InvokeAsync(StateHasChanged);
     }
     
     private async Task OnSave()
     {
-        if (getOrdersPositionsResponse == null) return;
-        // await ProdPrioritiesService.SaveOrdersPositions(getOrdersPositionsResponse.OrdersPositions);
+        var resp = await ProdPrioritiesService.SaveProductionPriority(new CreateProductionPriorityRequest
+        {
+            positions = sortedList.Values.ToList()
+        });
+        
+        if (resp)
+        {
+            NavigationManager.NavigateTo("/");
+        }
     }
-
 }
