@@ -3,66 +3,106 @@
 @using LuzyceWebApp.Services
 @using Microsoft.FluentUI.AspNetCore.Components
 @inject ProdPrioritiesService ProdPrioritiesService
+@inject IJSRuntime JSRuntime
 
 @if (getOrdersPositionsResponse == null)
 {
-<p>
-    <em>Loading...</em>
-</p>
-return;
+    <p>
+        <em>Loading...</em>
+    </p>
+    return;
 }
 
-<ul class="list-group">
-    <FluentGrid Justify="JustifyContent.FlexStart" Spacing="3">
-        <FluentGridItem xs="12" sm="6">
-            <FluentSortableList Items="getOrdersPositionsResponse.OrdersPositions" OnUpdate="@SortList">
-                <ItemTemplate>
-                    <li class="list-group-item">@context.Lampshade.Code @context.LampshadeNorm.Variant.Name @context.LampshadeDekor <h6 style="float: right">@context.ProductionOrderNumber</h6></li>
-                </ItemTemplate>
-            </FluentSortableList>
-        </FluentGridItem>
-    </FluentGrid>
-</ul>
+<div id="sortable-table">
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Klosz/wersja</th>
+            <th scpoe="col">ilość</th>
+            <th scpoe="col">ilość na wzm</th>
+            <th scpoe="col">wzm</th>
+            <th scope="col">nr zlecenia</th>
+            <th scope="col">Klient</th>
+            <th scope="col">Uwagi</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in getOrdersPositionsResponse.OrdersPositions)
+        {
+            <tr data-id="@item.Id">
+                <td>@item.Lampshade.Code @item.LampshadeNorm.Variant.Name @item.LampshadeDekor</td>
+                <td>@item.QuantityNetto</td>
+                <td>@item.LampshadeNorm.QuantityPerChange</td>
+                <td>@item.NumberOfChanges</td>
+                <td>@item.ProductionOrderNumber</td>
+                <td>@item.Client</td>
+                <td>@item.Remarks</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+<button class="btn btn-primary" style="float: right" @onclick="OnSave">Zapisz</button>
+
+<script>
+    window.initializeSortable = (dotNetHelper) => {
+        const tableBody = document.querySelector('#sortable-table tbody');
+        if (tableBody) {
+            new Sortable(tableBody, {
+                animation: 150,
+                onEnd: (evt) => {
+                    const sortedIds = [...evt.to.rows].map(row => parseInt(row.dataset.id));
+
+                    // const sortedIds = [...tableBody.querySelectorAll('tr')].map(row => parseInt(row.getAttribute('data-id')));
+                    dotNetHelper.invokeMethodAsync('SortList', sortedIds);
+                }
+            });
+        }
+    };
+</script>
 
 @code {
-    public class OrderPositionItem
-    {
-        public int Id { get; set; }
-        public string LampshadeCode { get; set; } = "";
-    }
-
-    private GetOrdersPositionsResponse? getOrdersPositionsResponse = new GetOrdersPositionsResponse();
-
+    private GetOrdersPositionsResponse? getOrdersPositionsResponse;
+    private SortedList<int, GetProductionOrderPosition> sortedList = new();
     protected override async Task OnInitializedAsync()
     {
         getOrdersPositionsResponse = await ProdPrioritiesService.GetOrdersPositions();
+        for (var i = 0; i < getOrdersPositionsResponse!.OrdersPositions.Count; i++)
+        {
+            sortedList.Add(i * 10, getOrdersPositionsResponse.OrdersPositions[i]);
+        }
         
+        await InvokeAsync(StateHasChanged);
+        await JSRuntime.InvokeVoidAsync("initializeSortable", DotNetObjectReference.Create(this));
     }
 
-    private void SortList(FluentSortableListEventArgs args)
+    [JSInvokable]
+    public async Task SortList(int[] sortedIds)
     {
-        if (args.OldIndex == args.NewIndex || getOrdersPositionsResponse == null)
+        if (getOrdersPositionsResponse == null) return;
+
+        sortedList.Clear();
+        
+        for (var i = 0; i < sortedIds.Length; i++)
         {
-            return;
+            var item = getOrdersPositionsResponse.OrdersPositions.FirstOrDefault(x => x.Id == sortedIds[i]);
+            if (item != null)
+            {
+                sortedList.Add(i * 10, item);
+            }
         }
 
-        var oldIndex = args.OldIndex;
-        var newIndex = args.NewIndex;
-
-        var itemToMove = getOrdersPositionsResponse.OrdersPositions[oldIndex];
-        getOrdersPositionsResponse.OrdersPositions.RemoveAt(oldIndex);
-
-        if (newIndex < getOrdersPositionsResponse.OrdersPositions.Count)
-        {
-            getOrdersPositionsResponse.OrdersPositions.Insert(newIndex, itemToMove);
-        }
-        else
-        {
-            getOrdersPositionsResponse.OrdersPositions.Add(itemToMove);
-        }
-        foreach (var item in getOrdersPositionsResponse.OrdersPositions)
+        foreach (var item in sortedList.Values)
         {
             Console.WriteLine(item.Id);
         }
+        await InvokeAsync(StateHasChanged);
     }
+    
+    private async Task OnSave()
+    {
+        if (getOrdersPositionsResponse == null) return;
+        // await ProdPrioritiesService.SaveOrdersPositions(getOrdersPositionsResponse.OrdersPositions);
+    }
+
 }
