@@ -1,5 +1,8 @@
 ﻿@using LuzyceWebApp.Redirects
+@using LuzyceWebApp.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@inject TokenRefreshService TokenRefreshService
+
 
 <CascadingAuthenticationState>
     <AuthorizeView>
@@ -21,3 +24,15 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    protected override void OnInitialized()
+    {
+        TokenRefreshService.Start();
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        await TokenRefreshService.DisposeAsync();
+    }
+}

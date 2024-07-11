@@ -14,6 +14,7 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri("http://l
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<IPrintingService, PrintingService>();
+builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<AccountService>();
@@ -21,5 +22,6 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<TokenValidationService>();
 builder.Services.AddScoped<ProductionOrderService>();
 builder.Services.AddScoped<ProdPrioritiesService>();
+builder.Services.AddScoped<TokenRefreshService>();
 
 await builder.Build().RunAsync();
