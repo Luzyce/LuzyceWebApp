@@ -14,14 +14,20 @@
     return;
 }
 
+<style>
+    .highlighted td {
+        background-color: #FFCCCE;
+    }
+</style>
+
 <div id="sortable-table">
     <table class="table">
         <thead>
         <tr>
             <th scope="col">Klosz/wersja</th>
-            <th scpoe="col">ilość</th>
-            <th scpoe="col">ilość na wzm</th>
-            <th scpoe="col">wzm</th>
+            <th scope="col">ilość</th>
+            <th scope="col">ilość na wzm</th>
+            <th scope="col">wzm</th>
             <th scope="col">nr zlecenia</th>
             <th scope="col">Klient</th>
             <th scope="col">Uwagi</th>
@@ -30,7 +36,7 @@
         <tbody>
         @foreach (var item in getOrdersPositionsResponse.OrdersPositions)
         {
-            <tr data-id="@item.Id">
+            <tr data-id="@item.Id" data-code="@item.Lampshade.Code" data-variant="@item.LampshadeNorm.Variant.Name">
                 <td>@item.Lampshade.Code @item.LampshadeNorm.Variant.Name @item.LampshadeDekor</td>
                 <td>@item.QuantityNetto</td>
                 <td>@item.LampshadeNorm.QuantityPerChange</td>
@@ -55,6 +61,36 @@
                     dotNetHelper.invokeMethodAsync('SortList', [...evt.to.rows].map(row => parseInt(row.dataset.id)));
                 }
             });
+
+            tableBody.addEventListener('mouseover', (event) => {
+                if (event.target.tagName === 'TD') {
+                    const tr = event.target.closest('tr');
+                    if (tr) {
+                        const code = tr.dataset.code;
+                        const variant = tr.dataset.variant;
+                        document.querySelectorAll('#sortable-table tbody tr').forEach(row => {
+                            if (row.dataset.code === code && row.dataset.variant === variant) {
+                                row.classList.add('highlighted');
+                            }
+                        });
+                    }
+                }
+            });
+
+            tableBody.addEventListener('mouseout', (event) => {
+                if (event.target.tagName === 'TD') {
+                    const tr = event.target.closest('tr');
+                    if (tr) {
+                        const code = tr.dataset.code;
+                        const variant = tr.dataset.variant;
+                        document.querySelectorAll('#sortable-table tbody tr').forEach(row => {
+                            if (row.dataset.code === code && row.dataset.variant === variant) {
+                                row.classList.remove('highlighted');
+                            }
+                        });
+                    }
+                }
+            });
         }
     };
 </script>
@@ -62,6 +98,7 @@
 @code {
     private GetOrdersPositionsResponse? getOrdersPositionsResponse;
     private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();
+    
     protected override async Task OnInitializedAsync()
     {
         getOrdersPositionsResponse = await ProdPrioritiesService.GetOrdersPositions();
@@ -69,7 +106,7 @@
         {
             sortedList.Add(i * 10, getOrdersPositionsResponse.OrdersPositions[i]);
         }
-        
+
         await InvokeAsync(StateHasChanged);
         await JSRuntime.InvokeVoidAsync("initializeSortable", DotNetObjectReference.Create(this));
     }
@@ -80,7 +117,7 @@
         if (getOrdersPositionsResponse == null) return;
 
         sortedList.Clear();
-        
+
         for (var i = 0; i < sortedIds.Length; i++)
         {
             var item = getOrdersPositionsResponse.OrdersPositions.FirstOrDefault(x => x.Id == sortedIds[i]);
@@ -89,20 +126,21 @@
                 sortedList.Add(i * 10, item);
             }
         }
-        
+
         await InvokeAsync(StateHasChanged);
     }
-    
+
     private async Task OnSave()
     {
         var resp = await ProdPrioritiesService.SaveProductionPriority(new CreateProductionPriorityRequest
         {
             positions = sortedList.Values.ToList()
         });
-        
+
         if (resp)
         {
             NavigationManager.NavigateTo("/");
         }
     }
+    
 }
