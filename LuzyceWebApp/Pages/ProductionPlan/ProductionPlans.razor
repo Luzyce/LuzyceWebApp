@@ -1,0 +1,135 @@
+﻿@page "/productionPlans"
+@using System.Globalization
+
+<style>
+    .table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    .table th, .table td {
+        border: 1px solid lightgray;
+        padding: 8px;
+        text-align: left;
+        vertical-align: top;
+        white-space: nowrap;
+    }
+
+    .current-day {
+        outline: 3px solid black; 
+    }
+
+    .day-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .day-number {
+        width: 20px;
+        text-align: right;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        margin-left: 8px;
+    }
+
+    .grid-item {
+        border: 1px solid black;
+        width: 60px;
+        height: 20px;
+    }
+</style>
+
+<div class="d-flex justify-content-between mb-3">
+    <button class="btn btn-primary" @onclick="PreviousMonth">Poprzedni Miesiąc</button>
+    <h3>@CurrentDate.ToString("MMMM yyyy", new CultureInfo("pl-PL"))</h3>
+    <button class="btn btn-primary" @onclick="NextMonth">Przyszły Miesiąc</button>
+</div>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th scope="col">P</th>
+        <th scope="col">W</th>
+        <th scope="col">Ś</th>
+        <th scope="col">C</th>
+        <th scope="col">P</th>
+        <th scope="col">S</th>
+        <th scope="col">N</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var week in DaysOfMonth!.GroupBy(d => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(d, CalendarWeekRule.FirstDay, DayOfWeek.Monday)))
+    {
+        <tr>
+            @for (int i = 1; i <= 7; i++)
+            {
+                var day = week.FirstOrDefault(d => (int)d.DayOfWeek == i % 7);
+
+                if (day != default)
+                {
+                    var isCurrentDay = day.Date == DateTime.Now.Date;
+                    <td class="@(isCurrentDay ? "current-day" : "")">
+                        <div class="day-container">
+                            <div class="day-number">@day.Day</div>
+                            <div class="grid-container">
+                                @for (int j = 0; j < 9; j++)
+                                {
+                                    <div class="grid-item"></div>
+                                }
+                            </div>
+                        </div>
+                    </td>
+                }
+                else
+                {
+                    <td></td>
+                }
+            }
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    private List<DateTime>? DaysOfMonth { get; set; }
+    private DateTime CurrentDate { get; set; } = DateTime.Now;
+
+    protected override void OnInitialized()
+    {
+        UpdateDaysOfMonth();
+    }
+
+    private void UpdateDaysOfMonth()
+    {
+        DaysOfMonth = GetDaysOfMonth(CurrentDate.Year, CurrentDate.Month);
+    }
+
+    private static List<DateTime> GetDaysOfMonth(int year, int month)
+    {
+        var days = new List<DateTime>();
+        var daysInMonth = DateTime.DaysInMonth(year, month);
+
+        for (var day = 1; day <= daysInMonth; day++)
+        {
+            days.Add(new DateTime(year, month, day));
+        }
+
+        return days;
+    }
+
+    private void PreviousMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(-1);
+        UpdateDaysOfMonth();
+    }
+
+    private void NextMonth()
+    {
+        CurrentDate = CurrentDate.AddMonths(1);
+        UpdateDaysOfMonth();
+    }
+}
