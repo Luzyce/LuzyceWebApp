@@ -1,0 +1,21 @@
+﻿@page "/productionPlan"
+@using System.Globalization
+<h3>@DateString Warsztatozmiana: @Change Zespół: @Team</h3>
+
+<a class="btn btn-primary" href="/productionPlans" role="button">Powrót</a>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public DateOnly Date { get; set; }
+    
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int Change { get; set; }
+    
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int Team { get; set; }
+
+    private string DateString => Date.ToString("d", new CultureInfo("pl-PL"));
+}
