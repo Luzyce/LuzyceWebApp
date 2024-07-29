@@ -109,10 +109,9 @@
                         <div class="day-number">@day.Day</div>
                         <div class="day-container">
                             <div class="grid-container">
-                                @for (var j = 0; j < 9; j++)
+                                @for (var change = 1; change < 4; change++)
+                                for (var team = 1; team < 4; team++)
                                 {
-                                    var change = j / 3 + 1;
-                                    var team = j % 3 + 1;
                                     var statusClass = productionPlans?.FirstOrDefault(
                                             p => p.Date == DateOnly.FromDateTime(day) &&
                                                  p.Change == change && p.Team == team)?.Status!.Id switch
@@ -121,7 +120,10 @@
                                             3 => "status-planned",
                                             _ => ""
                                         };
-                                    <div class="grid-item @statusClass" @onclick="() => OnGridItemClick(day, change, team)">&nbsp;</div>
+                                    
+                                    var locChange = change;
+                                    var locTeam = team;
+                                    <div class="grid-item @statusClass" @onclick="() => OnGridItemClick(day, locChange, locTeam)">&nbsp;</div>
                                 }
                             </div>
                         </div>

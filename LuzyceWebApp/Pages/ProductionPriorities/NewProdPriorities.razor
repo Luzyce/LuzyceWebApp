@@ -31,6 +31,7 @@
             <th scope="col">nr zlecenia</th>
             <th scope="col">Klient</th>
             <th scope="col">Uwagi</th>
+            <th scope="col">Dodaj</th>
         </tr>
         </thead>
         <tbody>
@@ -44,12 +45,18 @@
                 <td>@item.ProductionOrderNumber</td>
                 <td>@item.Client</td>
                 <td>@item.Remarks</td>
+                @* <td class="add-number"><input type="number" class="form-control narrow-input" min="0"/></td> *@
+                @* <td class="add-btn"><a class="btn btn-primary btn-sm" href="/productionPlans" role="button">+</a></td> *@
+                <td style="width: 80px">
+                    <input type="number" class="form-control form-control-sm" min="0"></td>
             </tr>
         }
         </tbody>
     </table>
 </div>
+
 <button class="btn btn-primary" style="float: right" @onclick="OnSave">Zapisz</button>
+<button class="btn btn-primary" style="float: right" @onclick="OnSave">Dodaj pozycje do planu prod</button>
 
 <script>
     window.initializeSortable = (dotNetHelper) => {
