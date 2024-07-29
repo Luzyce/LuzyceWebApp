@@ -1,4 +1,16 @@
-﻿@using System.Globalization
+﻿@page "/production-plans"
+@using System.Globalization
+@using Luzyce.Core.Models.ProductionPlan
+@using LuzyceWebApp.Services
+@inject ProductionPlanService ProductionPlanService
+
+@if (DaysOfMonth == null || productionPlans == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+    return;
+}
 
 <style>
     .table {
@@ -58,11 +70,10 @@
     .status-planned {
         background-color: green;
     }
-    
+
     .status-inprogress {
         background-color: red;
     }
-    
 </style>
 
 <div class="d-flex justify-content-between mb-3">
@@ -84,10 +95,10 @@
     </tr>
     </thead>
     <tbody>
-    @foreach (var week in DaysOfMonth!.GroupBy(d => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(d, CalendarWeekRule.FirstDay, DayOfWeek.Monday)))
+    @foreach (var week in DaysOfMonth.GroupBy(d => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(d, CalendarWeekRule.FirstDay, DayOfWeek.Monday)))
     {
         <tr>
-            @for (int i = 1; i <= 7; i++)
+            @for (var i = 1; i <= 7; i++)
             {
                 var day = week.FirstOrDefault(d => (int)d.DayOfWeek == i % 7);
 
@@ -98,9 +109,17 @@
                         <div class="day-number">@day.Day</div>
                         <div class="day-container">
                             <div class="grid-container">
-                                @for (int j = 0; j < 9; j++)
+                                @for (var j = 0; j < 9; j++)
                                 {
-                                    <div class="grid-item">&nbsp;</div>
+                                    var statusClass = productionPlans?.FirstOrDefault(
+                                            p => p.Date == DateOnly.FromDateTime(day) && 
+                                                 p.Change == j / 3 + 1 && p.Team == j % 3 + 1)?.Status!.Id switch
+                                    {
+                                        1 => "status-inprogress",
+                                        3 => "status-planned",
+                                        _ => ""
+                                    };
+                                    <div class="grid-item @statusClass">&nbsp;</div>
                                 }
                             </div>
                         </div>
@@ -119,15 +138,36 @@
 @code {
     private List<DateTime>? DaysOfMonth { get; set; }
     private DateTime CurrentDate { get; set; } = DateTime.Now;
+    private List<GetProductionPlan>? productionPlans;
+    private DateOnly CurrentDay => DateOnly.FromDateTime(DateTime.Now);
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         UpdateDaysOfMonth();
+        await LoadProductionPlans();
     }
 
     private void UpdateDaysOfMonth()
     {
         DaysOfMonth = GetDaysOfMonth(CurrentDate.Year, CurrentDate.Month);
+    }
+
+    private async Task LoadProductionPlans()
+    {
+        var oldProductionPlans = await ProductionPlanService
+            .GetProductionPlansAsync(
+                new GetMonthProductionPlanRequest()
+                {
+                    ProductionPlanDate = new DateOnly(CurrentDate.Year, CurrentDate.Month, 1)
+                });
+                
+
+        if (oldProductionPlans == null)
+        {
+            return;
+        }
+        
+        productionPlans = oldProductionPlans.ProductionPlans;
     }
 
     private static List<DateTime> GetDaysOfMonth(int year, int month)
@@ -143,15 +183,18 @@
         return days;
     }
 
-    private void PreviousMonth()
+    private async Task PreviousMonth()
     {
         CurrentDate = CurrentDate.AddMonths(-1);
         UpdateDaysOfMonth();
+        await LoadProductionPlans();
     }
 
-    private void NextMonth()
+    private async Task NextMonth()
     {
         CurrentDate = CurrentDate.AddMonths(1);
         UpdateDaysOfMonth();
+        await LoadProductionPlans();
     }
+
 }

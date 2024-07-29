@@ -23,5 +23,6 @@ builder.Services.AddScoped<TokenValidationService>();
 builder.Services.AddScoped<ProductionOrderService>();
 builder.Services.AddScoped<ProdPrioritiesService>();
 builder.Services.AddScoped<TokenRefreshService>();
+builder.Services.AddScoped<ProductionPlanService>();
 
 await builder.Build().RunAsync();
