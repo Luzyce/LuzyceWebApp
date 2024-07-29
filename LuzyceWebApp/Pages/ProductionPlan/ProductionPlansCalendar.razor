@@ -111,15 +111,17 @@
                             <div class="grid-container">
                                 @for (var j = 0; j < 9; j++)
                                 {
+                                    var change = j / 3 + 1;
+                                    var team = j % 3 + 1;
                                     var statusClass = productionPlans?.FirstOrDefault(
-                                            p => p.Date == DateOnly.FromDateTime(day) && 
-                                                 p.Change == j / 3 + 1 && p.Team == j % 3 + 1)?.Status!.Id switch
-                                    {
-                                        1 => "status-inprogress",
-                                        3 => "status-planned",
-                                        _ => ""
-                                    };
-                                    <div class="grid-item @statusClass">&nbsp;</div>
+                                            p => p.Date == DateOnly.FromDateTime(day) &&
+                                                 p.Change == change && p.Team == team)?.Status!.Id switch
+                                        {
+                                            1 => "status-inprogress",
+                                            3 => "status-planned",
+                                            _ => ""
+                                        };
+                                    <div class="grid-item @statusClass" @onclick="() => OnGridItemClick(day, change, team)">&nbsp;</div>
                                 }
                             </div>
                         </div>
@@ -141,6 +143,8 @@
     private List<GetProductionPlan>? productionPlans;
     private DateOnly CurrentDay => DateOnly.FromDateTime(DateTime.Now);
 
+    [Parameter] public EventCallback<(DateOnly date, int change, int team)> OnItemClick { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         UpdateDaysOfMonth();
@@ -160,13 +164,12 @@
                 {
                     ProductionPlanDate = new DateOnly(CurrentDate.Year, CurrentDate.Month, 1)
                 });
-                
 
         if (oldProductionPlans == null)
         {
             return;
         }
-        
+
         productionPlans = oldProductionPlans.ProductionPlans;
     }
 
@@ -195,6 +198,11 @@
         CurrentDate = CurrentDate.AddMonths(1);
         UpdateDaysOfMonth();
         await LoadProductionPlans();
+    }
+
+    private async Task OnGridItemClick(DateTime date, int change, int team)
+    {
+        await OnItemClick.InvokeAsync((DateOnly.FromDateTime(date), change, team));
     }
 
 }

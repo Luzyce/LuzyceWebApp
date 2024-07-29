@@ -1,7 +1,14 @@
 ﻿@page "/productionPlans"
+@inject NavigationManager Navigation
 
-<ProductionPlansCalendar @ref="productionPlansCalendar" />
+<ProductionPlansCalendar @ref="productionPlansCalendar" OnItemClick="HandleItemClick" />
 
 @code {
     private ProductionPlansCalendar productionPlansCalendar;
+
+    private void HandleItemClick((DateOnly date, int change, int team) item)
+    {
+        var (date, change, team) = item;
+        Navigation.NavigateTo($"/productionPlan?date={date}&change={change}&team={team}");
+    }
 }
