@@ -5,13 +5,7 @@
 @using Microsoft.IdentityModel.Tokens
 @inject ProductionPlanService ProductionPlanService
 
-@if (GetProductionPlanPositions == null)
-{
-    <p><em>Loading...</em></p>
-    return;
-}
-
-@if (GetProductionPlanPositions.ProductionPlanPositions.IsNullOrEmpty())
+@if (GetProductionPlanPositions == null || GetProductionPlanPositions.ProductionPlanPositions.IsNullOrEmpty())
 {
     <h3>Brak pozycji w planie produkcji</h3>
     <a class="btn btn-primary" href="/productionPriority/new?date=@Date&change=@Change&team=@Team" role="button">Dodaj pozycje</a>

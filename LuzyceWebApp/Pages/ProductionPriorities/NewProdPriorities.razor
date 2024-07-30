@@ -1,4 +1,5 @@
 ﻿@page "/productionPriority/new"
+@using System.Globalization
 @using Luzyce.Core.Models.ProductionOrder
 @using Luzyce.Core.Models.ProductionPlan
 @using Luzyce.Core.Models.ProductionPriority
@@ -14,6 +15,13 @@
         <em>Loading...</em>
     </p>
     return;
+}
+
+@if (Date != default && Change != 0 && Team != 0)
+{
+    <div class="alert alert-warning" role="alert">
+        Wybierasz pozycję dla @DateString Zmiana: @Change Zespół: @Team
+    </div>
 }
 
 <style>
@@ -157,6 +165,8 @@
     [Parameter]
     [SupplyParameterFromQuery]
     public int Team { get; set; }
+    
+    private string DateString => Date.ToString("d", new CultureInfo("pl-PL"));
     
     private GetOrdersPositionsResponse? getOrdersPositionsResponse;
     private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();
