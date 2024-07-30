@@ -1,2 +1,2 @@
 *.razor linguist-language=C#
-*.js linguist-detectable=false
+LuzyceWebApp/wwwroot/** linguist-vendored
