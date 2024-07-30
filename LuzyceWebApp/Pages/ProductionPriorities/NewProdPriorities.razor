@@ -25,6 +25,10 @@
 }
 
 <style>
+    .warning td {
+        background-color: rgba(202, 3, 3, 0.05);
+    }
+    
     .highlighted td {
         background-color: #FFCCCE;
     }
@@ -47,7 +51,7 @@
         <tbody>
         @foreach (var item in getOrdersPositionsResponse.OrdersPositions)
         {
-            <tr data-id="@item.Id" data-code="@item.Lampshade.Code" data-variant="@item.LampshadeNorm.Variant.Name">
+            <tr data-id="@item.Id" data-code="@item.Lampshade.Code" data-variant="@item.LampshadeNorm.Variant.Name" class="@((item.LampshadeNorm.QuantityPerChange > 0) ? "" : "warning")">
                 <td>@item.Lampshade.Code @item.LampshadeNorm.Variant.Name @item.LampshadeDekor</td>
                 <td>@item.QuantityNetto</td>
                 <td>@item.LampshadeNorm.QuantityPerChange</td>
@@ -56,7 +60,7 @@
                 <td>@item.Client</td>
                 <td>@item.Remarks</td>
                 <td style="width: 80px">
-                    <input type="number" class="form-control form-control-sm" min="0" @oninput="(e) => OnPositionInput(item.Id, e)">
+                    <input type="number" class="form-control form-control-sm" min="0" disabled="@(item.LampshadeNorm.QuantityPerChange < 1)" @oninput="(e) => OnPositionInput(item.Id, e)">
                 </td>
             </tr>
         }
