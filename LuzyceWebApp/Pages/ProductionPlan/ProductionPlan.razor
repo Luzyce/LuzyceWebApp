@@ -1,6 +1,60 @@
 ﻿@page "/productionPlan"
 @using System.Globalization
+@using Luzyce.Core.Models.ProductionPlan
+@using LuzyceWebApp.Services
+@using Microsoft.IdentityModel.Tokens
+@inject ProductionPlanService ProductionPlanService
+
+@if (GetProductionPlanPositions == null)
+{
+    <p><em>Loading...</em></p>
+    return;
+}
+
+@if (GetProductionPlanPositions.ProductionPlanPositions.IsNullOrEmpty())
+{
+    <h3>Brak pozycji w planie produkcji</h3>
+    <a class="btn btn-primary" href="/productionPriority/new?date=@Date&change=@Change&team=@Team" role="button">Dodaj pozycje</a>
+    return;
+}
+
 <h3>@DateString Zmiana: @Change Zespół: @Team</h3>
+
+<div id="sortable-table">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Asortyment</th>
+                <th scope="col">Wersja wykonania</th>
+                <th scope="col">Warsztat hutnika</th>
+                <th scope="col">Ilość godz</th>
+                <th scope="col">Waga netto</th>
+                <th scope="col">Waga brutto</th>
+                <th scope="col">Norma</th>
+                <th scope="col">Dla firmy/mag.</th>
+                <th scope="col">Uwagi</th>
+                <th scope="col">Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in GetProductionPlanPositions.ProductionPlanPositions)
+            {
+                <tr data-id="@item.Id" data-code="@item.DocumentPosition.Lampshade.Code" data-variant="@item.DocumentPosition.LampshadeNorm.Variant.Name">
+                    <td>@item.DocumentPosition.Lampshade.Code</td>
+                    <td>@item.DocumentPosition.LampshadeNorm.Variant.Name @item.DocumentPosition.LampshadeDekor</td>
+                    <td>?</td>
+                    <td>@* TODO: INPUT DLA ILOSC GODZ *@</td>
+                    <td>@* TODO: INPUT DLA WAGA NETTO *@</td>
+                    <td>@* TODO: INPUT DLA WAGA BRUTTO *@</td>
+                    <td>@item.DocumentPosition.LampshadeNorm.QuantityPerChange</td>
+                    <td>@item.DocumentPosition.Client</td>
+                    <td>@item.DocumentPosition.Remarks</td>
+                    <td><button class="btn btn-primary btn-sm" @onclick="() => DeletePosition(item.Id)">Usuń</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 <a class="btn btn-primary" href="/productionPlans" role="button">Powrót</a>
 
@@ -18,4 +72,27 @@
     public int Team { get; set; }
 
     private string DateString => Date.ToString("d", new CultureInfo("pl-PL"));
+    private GetProductionPlanPositions? GetProductionPlanPositions { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        GetProductionPlanPositions = await ProductionPlanService.GetPositionsAsync(new GetProductionPlanPositionsRequest()
+        {
+            Change = Change,
+            Date = Date,
+            Team = Team
+        });
+    }
+
+    private async Task DeletePosition(int id)
+    {
+        await ProductionPlanService.DeletePositionAsync(id);
+        GetProductionPlanPositions = await ProductionPlanService.GetPositionsAsync(new GetProductionPlanPositionsRequest()
+        {
+            Change = Change,
+            Date = Date,
+            Team = Team
+        });
+        StateHasChanged();
+    }
 }

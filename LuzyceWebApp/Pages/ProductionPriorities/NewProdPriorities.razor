@@ -1,6 +1,8 @@
 ﻿@page "/productionPriority/new"
 @using Luzyce.Core.Models.ProductionOrder
+@using Luzyce.Core.Models.ProductionPlan
 @using Luzyce.Core.Models.ProductionPriority
+@using LuzyceWebApp.Pages.ProductionPlan
 @using LuzyceWebApp.Services
 @inject ProdPrioritiesService ProdPrioritiesService
 @inject IJSRuntime JSRuntime
@@ -45,18 +47,33 @@
                 <td>@item.ProductionOrderNumber</td>
                 <td>@item.Client</td>
                 <td>@item.Remarks</td>
-                @* <td class="add-number"><input type="number" class="form-control narrow-input" min="0"/></td> *@
-                @* <td class="add-btn"><a class="btn btn-primary btn-sm" href="/productionPlans" role="button">+</a></td> *@
                 <td style="width: 80px">
-                    <input type="number" class="form-control form-control-sm" min="0"></td>
+                    <input type="number" class="form-control form-control-sm" min="0" @oninput="(e) => OnPositionInput(item.Id, e)">
+                </td>
             </tr>
         }
         </tbody>
     </table>
 </div>
 
-<button class="btn btn-primary" style="float: right" @onclick="OnSave">Zapisz</button>
-<button class="btn btn-primary" style="float: right" @onclick="OnSave">Dodaj pozycje do planu prod</button>
+<div style="float: right;">
+    <button class="btn btn-primary" @onclick="CheckParametersAndHandleClick" disabled="@IsAddButtonDisabled">Dodaj pozycje do planu prod</button>
+    <button class="btn btn-primary" @onclick="OnSave">Zapisz</button>
+</div>
+
+<div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="calendarModalLabel">Dodawanie pozycji do planu prod</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ProductionPlansCalendar @ref="productionPlansCalendar" OnItemClick="HandleItemClick"/>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     window.initializeSortable = (dotNetHelper) => {
@@ -100,12 +117,52 @@
             });
         }
     };
+
+    window.openModal = () => {
+        const modalElement = document.getElementById('calendarModal');
+        if (modalElement) {
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (!modalInstance) {
+                const newModalInstance = new bootstrap.Modal(modalElement);
+                newModalInstance.show();
+            } else {
+                modalInstance.show();
+            }
+        }
+    };
+    
+    window.closeModal = () => {
+        const modalElement = document.getElementById('calendarModal');
+        if (modalElement) {
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) {
+                modalInstance.hide();
+            } else {
+                const newModalInstance = new bootstrap.Modal(modalElement);
+                newModalInstance.hide();
+            }
+        }
+    };
 </script>
 
 @code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public DateOnly Date { get; set; }
+    
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int Change { get; set; }
+    
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int Team { get; set; }
+    
     private GetOrdersPositionsResponse? getOrdersPositionsResponse;
     private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();
-    
+    private readonly Dictionary<int, int> productionOrdersPositions = new();
+    private ProductionPlansCalendar productionPlansCalendar = new ProductionPlansCalendar();
+
     protected override async Task OnInitializedAsync()
     {
         getOrdersPositionsResponse = await ProdPrioritiesService.GetOrdersPositions();
@@ -149,5 +206,66 @@
             NavigationManager.NavigateTo("/");
         }
     }
+
+    private void OnPositionInput(int positionId, ChangeEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
+        {
+            return;
+        }
+
+        var isValid = int.TryParse(e.Value?.ToString(), out var newQuantity);
+
+        if (isValid && newQuantity >= 0)
+        {
+            if (newQuantity != 0)
+            {
+                productionOrdersPositions[positionId] = newQuantity;
+            }
+            else
+            {
+                productionOrdersPositions.Remove(positionId);
+            }
+        }
+
+        Console.WriteLine("ProductionOrdersPositions:");
+        foreach (var position in productionOrdersPositions)
+        {
+            Console.WriteLine($"PositionId: {position.Key}, Quantity: {position.Value}");
+        }
+
+        StateHasChanged();
+    }
+
+    private bool IsAddButtonDisabled => productionOrdersPositions.Count == 0;
     
+    private async Task CheckParametersAndHandleClick()
+    {
+        if (Date != default && Change != 0 && Team != 0)
+        {
+            await HandleItemClick((Date, Change, Team));
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("openModal");
+        }
+    }
+
+
+    private async Task HandleItemClick((DateOnly date, int change, int team) item)
+    {
+        var (date, change, team) = item;
+        var addPositionsToProductionPlan = new AddPositionsToProductionPlan
+        {
+            Date = date,
+            Change = change,
+            Team = team,
+            Positions = productionOrdersPositions
+        };
+
+        await ProdPrioritiesService.AddPositionsToProductionPlanAsync(addPositionsToProductionPlan);
+        await JSRuntime.InvokeVoidAsync("closeModal");
+        NavigationManager.NavigateTo($"/productionPlan?date={date}&change={change}&team={team}");
+    }
+
 }

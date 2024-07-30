@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Luzyce.Core.Models.ProductionOrder;
+using Luzyce.Core.Models.ProductionPlan;
 using Luzyce.Core.Models.ProductionPriority;
 
 namespace LuzyceWebApp.Services;
@@ -25,5 +26,15 @@ public class ProdPrioritiesService(HttpClient httpClient, TokenValidationService
         }
         var response = await httpClient.PostAsJsonAsync("/api/productionPriority/save", request);
         return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
+    }
+    
+    public async Task AddPositionsToProductionPlanAsync(AddPositionsToProductionPlan addPositionsToProductionPlan)
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return;
+        }   
+
+        await httpClient.PostAsJsonAsync("/api/productionPlan/addPositions", addPositionsToProductionPlan);
     }
 }

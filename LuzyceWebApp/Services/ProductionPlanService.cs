@@ -21,4 +21,31 @@ public class ProductionPlanService(HttpClient httpClient, TokenValidationService
 
         return null;
     }
+    
+    public async Task<GetProductionPlanPositions?> GetPositionsAsync(GetProductionPlanPositionsRequest getProductionPlanPositionsRequest)
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return null;
+        }   
+
+        var response = await httpClient.PostAsJsonAsync("/api/productionPlan/getPositions", getProductionPlanPositionsRequest);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<GetProductionPlanPositions>();
+        }
+        
+        return null;
+    }
+    
+    public async Task DeletePositionAsync(int id)
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return;
+        }   
+
+        await httpClient.DeleteAsync($"/api/productionPlan/delPosition/{id}");
+    }
 }
