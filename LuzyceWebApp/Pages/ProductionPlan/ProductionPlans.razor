@@ -4,8 +4,8 @@
 <ProductionPlansCalendar @ref="productionPlansCalendar" OnItemClick="HandleItemClick" />
 
 @code {
-    private ProductionPlansCalendar productionPlansCalendar;
-
+    private ProductionPlansCalendar productionPlansCalendar = new ProductionPlansCalendar();
+    
     private void HandleItemClick((DateOnly date, int change, int team) item)
     {
         var (date, change, team) = item;

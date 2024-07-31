@@ -1,5 +1,7 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using Luzyce.Core.Models.ProductionPlan;
+using Luzyce.Core.Models.User;
 
 namespace LuzyceWebApp.Services;
 
@@ -22,21 +24,55 @@ public class ProductionPlanService(HttpClient httpClient, TokenValidationService
         return null;
     }
     
-    public async Task<GetProductionPlanPositions?> GetPositionsAsync(GetProductionPlanPositionsRequest getProductionPlanPositionsRequest)
+    public async Task<GetProductionPlan?> GetPositionsAsync(GetProductionPlanPositionsRequest getProductionPlanPositionsRequest)
     {
         if (!await tokenValidationService.IsTokenValid())
         {
             return null;
         }   
 
-        var response = await httpClient.PostAsJsonAsync("/api/productionPlan/getPositions", getProductionPlanPositionsRequest);
+        var response = await httpClient.PostAsJsonAsync("/api/productionPlan/getProductionPlan", getProductionPlanPositionsRequest);
         
         if (response.IsSuccessStatusCode)
         {
-            return await response.Content.ReadFromJsonAsync<GetProductionPlanPositions>();
+            return await response.Content.ReadFromJsonAsync<GetProductionPlan>();
         }
         
         return null;
+    }
+    
+    public async Task<List<GetUserResponseDto>?> GetShiftSupervisorsAsync()
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return [];
+        }   
+
+        var response = await httpClient.GetAsync("/api/productionPlan/getShiftSupervisor");
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<List<GetUserResponseDto>>();
+        }
+        
+        return [];
+    }
+    
+    public async Task<List<GetUserResponseDto>?> GetHeadsOfMetallurgicalTeamsAsync()
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return [];
+        }   
+
+        var response = await httpClient.GetAsync("/api/productionPlan/headsOfMetallurgicalTeams");
+        
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<List<GetUserResponseDto>>();
+        }
+        
+        return [];
     }
     
     public async Task DeletePositionAsync(int id)
@@ -47,5 +83,16 @@ public class ProductionPlanService(HttpClient httpClient, TokenValidationService
         }   
 
         await httpClient.DeleteAsync($"/api/productionPlan/delPosition/{id}");
+    }
+    
+    public async Task<bool> UpdateProductionPlan(UpdateProductionPlan request)
+    {
+        if (!await tokenValidationService.IsTokenValid())
+        {
+            return false;
+        }
+        
+        var response = await httpClient.PutAsJsonAsync("/api/productionPlan/updateProductionPlan", request);
+        return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
     }
 }

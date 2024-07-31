@@ -1,9 +1,19 @@
 ﻿@page "/productionPlan"
 @using System.Globalization
 @using Luzyce.Core.Models.ProductionPlan
+@using Luzyce.Core.Models.User
 @using LuzyceWebApp.Services
 @using Microsoft.IdentityModel.Tokens
 @inject ProductionPlanService ProductionPlanService
+@inject NavigationManager NavigationManager
+
+@if (ShiftSupervisors == null || HeadsOfMetallurgicalTeams == null)
+{
+    <p>
+        <em>Ładowanie...</em>
+    </p>
+    return;
+}
 
 @if (GetProductionPlanPositions == null || GetProductionPlanPositions.ProductionPlanPositions.IsNullOrEmpty())
 {
@@ -14,60 +24,89 @@
 
 <h3>@DateString Zmiana: @Change Zespół: @Team</h3>
 
+<div class="w-25 p-3">
+    <label>Hutmistrz:</label>
+    <select class="form-control" @bind="ShiftSupervisorId">
+        <option value="" selected="selected">&nbsp;</option>
+        @foreach (var shiftSupervisor in ShiftSupervisors)
+        {
+            <option value="@shiftSupervisor.Id">@shiftSupervisor.Id - @shiftSupervisor.Name</option>
+        }
+    </select>
+</div>
+
 <div id="sortable-table">
     <table class="table">
         <thead>
-            <tr>
-                <th scope="col">Asortyment</th>
-                <th scope="col">Wersja wykonania</th>
-                <th scope="col">Warsztat hutnika</th>
-                <th scope="col">Ilość godz</th>
-                <th scope="col">Waga netto</th>
-                <th scope="col">Waga brutto</th>
-                <th scope="col">Norma</th>
-                <th scope="col">Dla firmy/mag.</th>
-                <th scope="col">Uwagi</th>
-                <th scope="col">Akcje</th>
-            </tr>
+        <tr>
+            <th scope="col">Asortyment</th>
+            <th scope="col">Wersja wykonania</th>
+            <th scope="col">Warsztat hutnika</th>
+            <th scope="col">Ilość godz</th>
+            <th scope="col">Waga netto</th>
+            <th scope="col">Waga brutto</th>
+            <th scope="col">Norma</th>
+            <th scope="col">Dla firmy/mag.</th>
+            <th scope="col">Uwagi</th>
+            <th scope="col">Akcje</th>
+        </tr>
         </thead>
         <tbody>
-            @foreach (var item in GetProductionPlanPositions.ProductionPlanPositions)
-            {
-                <tr data-id="@item.Id" data-code="@item.DocumentPosition.Lampshade.Code" data-variant="@item.DocumentPosition.LampshadeNorm.Variant.Name">
-                    <td>@item.DocumentPosition.Lampshade.Code</td>
-                    <td>@item.DocumentPosition.LampshadeNorm.Variant.Name @item.DocumentPosition.LampshadeDekor</td>
-                    <td>?</td>
-                    <td>@* TODO: INPUT DLA ILOSC GODZ *@</td>
-                    <td>@* TODO: INPUT DLA WAGA NETTO *@</td>
-                    <td>@* TODO: INPUT DLA WAGA BRUTTO *@</td>
-                    <td>@item.DocumentPosition.LampshadeNorm.QuantityPerChange</td>
-                    <td>@item.DocumentPosition.Client</td>
-                    <td>@item.DocumentPosition.Remarks</td>
-                    <td><button class="btn btn-primary btn-sm" @onclick="() => DeletePosition(item.Id)">Usuń</button></td>
-                </tr>
-            }
+        @foreach (var item in GetProductionPlanPositions.ProductionPlanPositions)
+        {
+            <tr data-id="@item.Id" data-code="@item.DocumentPosition.Lampshade.Code" data-variant="@item.DocumentPosition.LampshadeNorm.Variant.Name">
+                <td>@item.DocumentPosition.Lampshade.Code</td>
+                <td>@item.DocumentPosition.LampshadeNorm.Variant.Name @item.DocumentPosition.LampshadeDekor</td>
+                <td>
+                    <select class="form-control" @bind="item.HeadsOfMetallurgicalTeamsId">
+                        <option value="">&nbsp;</option>
+                        @foreach (var headsOfMetallurgicalTeams in HeadsOfMetallurgicalTeams)
+                        {
+                        <option value="@headsOfMetallurgicalTeams.Id">
+                            @headsOfMetallurgicalTeams.Id - @headsOfMetallurgicalTeams.Name
+                        </option>
+                        }
+                    </select>
+                </td>
+                <td>
+                    <input type="number" class="form-control" id="name" @bind="item.NumberOfHours">
+                </td>
+                <td>
+                    <input type="number" class="form-control" id="name" @bind="item.DocumentPosition.LampshadeNorm.WeightNetto">
+                </td>
+                <td>
+                    <input type="number" class="form-control" id="name" @bind="item.DocumentPosition.LampshadeNorm.WeightBrutto">
+                </td>
+                <td>
+                    <input type="number" class="form-control" id="name" @bind="item.DocumentPosition.LampshadeNorm.QuantityPerChange">
+                </td>
+                <td>@item.DocumentPosition.Client</td>
+                <td>@item.DocumentPosition.Remarks</td>
+                <td>
+                    <button class="btn btn-primary btn-sm" @onclick="() => DeletePosition(item.Id)">Usuń</button>
+                </td>
+            </tr>
+        }
         </tbody>
     </table>
 </div>
 
-<a class="btn btn-primary" href="/productionPlans" role="button">Powrót</a>
+<a class="btn btn-secondary" href="/productionPlans" role="button">Powrót</a>
+<a class="btn btn-primary" href="/productionPlans" role="button" style="float: right" @onclick="OnSave">Zapisz</a>
 
 @code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public DateOnly Date { get; set; }
-    
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int Change { get; set; }
-    
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int Team { get; set; }
+    [Parameter] [SupplyParameterFromQuery] public DateOnly Date { get; set; }
+
+    [Parameter] [SupplyParameterFromQuery] public int Change { get; set; }
+
+    [Parameter] [SupplyParameterFromQuery] public int Team { get; set; }
 
     private string DateString => Date.ToString("d", new CultureInfo("pl-PL"));
-    private GetProductionPlanPositions? GetProductionPlanPositions { get; set; }
-    
+    private GetProductionPlan? GetProductionPlanPositions { get; set; }
+    private List<GetUserResponseDto>? ShiftSupervisors;
+    private int ShiftSupervisorId { get; set; }
+    private List<GetUserResponseDto>? HeadsOfMetallurgicalTeams { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         GetProductionPlanPositions = await ProductionPlanService.GetPositionsAsync(new GetProductionPlanPositionsRequest()
@@ -76,6 +115,11 @@
             Date = Date,
             Team = Team
         });
+
+        ShiftSupervisorId = GetProductionPlanPositions?.ShiftSupervisor?.Id ?? 0;
+
+        ShiftSupervisors = await ProductionPlanService.GetShiftSupervisorsAsync();
+        HeadsOfMetallurgicalTeams = await ProductionPlanService.GetHeadsOfMetallurgicalTeamsAsync();
     }
 
     private async Task DeletePosition(int id)
@@ -88,5 +132,30 @@
             Team = Team
         });
         StateHasChanged();
+    }
+    
+    private async Task OnSave()
+    {
+        var resp = await ProductionPlanService.UpdateProductionPlan(new UpdateProductionPlan
+        {
+            Id = GetProductionPlanPositions!.Id,
+            ShiftSupervisorId = ShiftSupervisorId,
+            ProductionPlanPositions = GetProductionPlanPositions!.ProductionPlanPositions
+                .Select(position => new UpdateInfoInProductionPlanPosition
+                {
+                    Id = position.Id,
+                    GetHeadsOfMetallurgicalTeamsId = position.HeadsOfMetallurgicalTeamsId,
+                    NumberOfHours = position.NumberOfHours,
+                    WeightNetto = position.DocumentPosition.LampshadeNorm.WeightNetto,
+                    WeightBrutto = position.DocumentPosition.LampshadeNorm.WeightBrutto,
+                    QuantityPerChange = position.DocumentPosition.LampshadeNorm.QuantityPerChange
+                })
+                .ToList()
+        });
+        
+        if (resp)
+        {
+            NavigationManager.NavigateTo("/productionPlans");
+        }
     }
 }
