@@ -238,12 +238,6 @@
             }
         }
 
-        Console.WriteLine("ProductionOrdersPositions:");
-        foreach (var position in productionOrdersPositions)
-        {
-            Console.WriteLine($"PositionId: {position.Key}, Quantity: {position.Value}");
-        }
-
         StateHasChanged();
     }
 
