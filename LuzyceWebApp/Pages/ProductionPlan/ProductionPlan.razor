@@ -46,9 +46,10 @@
             <th scope="col">Waga netto</th>
             <th scope="col">Waga brutto</th>
             <th scope="col">Norma</th>
-            <th scope="col">Dla firmy/mag.</th>
+            <th scope="col" style="width: 11%">Dla firmy/mag.</th>
             <th scope="col">Uwagi</th>
-            <th scope="col">Akcje</th>
+            <th scope="col">Nr Kwitu</th>
+            <th colspan="2">Akcje</th>
         </tr>
         </thead>
         <tbody>
@@ -82,8 +83,12 @@
                 </td>
                 <td>@item.DocumentPosition.Client</td>
                 <td>@item.DocumentPosition.Remarks</td>
+                <td>@item.Kwit!.Number</td>
                 <td>
-                    <button class="btn btn-primary btn-sm" @onclick="() => DeletePosition(item.Id)">Usuń</button>
+                    <a class="btn btn-primary btn-sm" href="">Wydrukuj</a>
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-sm" @onclick="() => DeletePosition(item.Id)">Usuń</button>
                 </td>
             </tr>
         }
