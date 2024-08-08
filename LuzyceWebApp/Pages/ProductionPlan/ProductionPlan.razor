@@ -1,11 +1,13 @@
 ﻿@page "/productionPlan"
 @using System.Globalization
+@using Append.Blazor.Printing
 @using Luzyce.Core.Models.ProductionPlan
 @using Luzyce.Core.Models.User
 @using LuzyceWebApp.Services
 @using Microsoft.IdentityModel.Tokens
 @inject ProductionPlanService ProductionPlanService
 @inject NavigationManager NavigationManager
+@inject IPrintingService PrintingService
 
 @if (ShiftSupervisors == null || HeadsOfMetallurgicalTeams == null)
 {
@@ -85,7 +87,9 @@
                 <td>@item.DocumentPosition.Remarks</td>
                 <td>@item.Kwit!.Number</td>
                 <td>
-                    <a class="btn btn-primary btn-sm" href="">Wydrukuj</a>
+                    <button type="button" class="btn btn-primary btn-sm" @onclick="@(()=> PrintingService.Print("http://localhost:5132/api/productionPlan/kwit-" + item.Kwit.Id + ".pdf"))">
+                        Wydrukuj
+                    </button>
                 </td>
                 <td>
                     <button class="btn btn-danger btn-sm" @onclick="() => DeletePosition(item.Id)">Usuń</button>
