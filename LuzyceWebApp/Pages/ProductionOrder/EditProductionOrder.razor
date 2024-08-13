@@ -74,9 +74,6 @@
         }
     </table>
     <button type="submit" class="btn btn-primary">Zapisz</button>
-    <button type="button" class="btn btn-secondary" @onclick="@(()=> PrintingService.Print("http://localhost:5132/api/productionOrder/zlecenieProdukcji-" + prodOrder.Id + ".pdf"))">
-        Wydrukuj
-    </button>
 </form>
 
 <QuantitiesInStock @ref="quantitiesInStockComponent" />
