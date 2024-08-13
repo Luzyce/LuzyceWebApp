@@ -25,10 +25,10 @@
             <th>Na zam.</th>
             <th>Na mag.</th>
             <th>Ilość</th>
+            <th>Ilość wykonana</th>
             <th>Ilość zmian</th>
             <th>Ilość na zmianę</th>
-            <th>Data wykonania</th>
-            <th>Ilość wykonana</th>
+            @* <th>Data wykonania</th> *@
             <th>Uwagi</th>
             <th>Sposób pakowania</th>
             <th>Po ile pakowane</th>
@@ -47,6 +47,9 @@
                     <a type="button" class="btn" @onclick="() => quantitiesInStockComponent.ShowStockModal(productWarehousesStocks[prodOrder.Positions.IndexOf(position)], unit)">@productWarehousesStocks[prodOrder.Positions.IndexOf(position)].Quantity @position.Unit</a>
                 </td>
                 <td>
+                    @position.QuantityOnPlans @position.Unit
+                </td>
+                <td>
                     <input type="number" class="form-control form-small" @bind="position.QuantityNetto">
                 </td>
                 <td>
@@ -55,12 +58,9 @@
                 <td>
                     <input type="number" class="form-control form-small" value="@position.LampshadeNorm.QuantityPerChange" @oninput="@(e => UpdateQuantityPerChange(position.LampshadeNorm.Id, e.Value!.ToString()!))">
                 </td>
-                <td>
-                    <input type="date" class="form-control form-small" @bind="position.ExecutionDate">
-                </td>
-                <td>
-                    <input type="number" class="form-control form-small" @bind="position.QuantityMade">
-                </td>
+                @* <td> *@
+                @*     <input type="date" class="form-control form-small" @bind="position.ExecutionDate"> *@
+                @* </td> *@
                 <td>
                     <input type="text" class="form-control form-small" @bind="position.Remarks">
                 </td>
@@ -163,4 +163,4 @@
         }
     }
 
-}
+};
