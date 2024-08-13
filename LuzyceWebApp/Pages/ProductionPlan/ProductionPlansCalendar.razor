@@ -99,44 +99,44 @@
         <tbody>
         @foreach (var week in DaysOfMonth.GroupBy(d => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(d, CalendarWeekRule.FirstDay, DayOfWeek.Monday)))
         {
-        <tr>
-            @for (var i = 1; i <= 7; i++)
-            {
-            var day = week.FirstOrDefault(d => (int)d.DayOfWeek == i % 7);
+            <tr>
+                @for (var i = 1; i <= 7; i++)
+                {
+                    var day = week.FirstOrDefault(d => (int)d.DayOfWeek == i % 7);
 
-            if (day != default)
-            {
-            var isCurrentDay = day.Date == DateTime.Now.Date;
-            <td class="@(isCurrentDay ? "current-day" : "")">
-                <div class="day-number">@day.Day</div>
-                <div class="day-container">
-                    <div class="grid-container">
-                        @for (var change = 1; change < 4; change++)
-                        for (var team = 1; team < 4; team++)
-                        {
-                        var statusClass = productionPlans?.FirstOrDefault(
-                        p => p.Date == DateOnly.FromDateTime(day) &&
-                        p.Change == change && p.Team == team)?.Status!.Id switch
-                        {
-                        1 => "status-inprogress",
-                        3 => "status-planned",
-                        _ => ""
-                        };
+                    if (day != default)
+                    {
+                        var isCurrentDay = day.Date == DateTime.Now.Date;
+                        <td class="@(isCurrentDay ? "current-day" : "")">
+                            <div class="day-number">@day.Day</div>
+                            <div class="day-container">
+                                <div class="grid-container">
+                                    @for (var change = 1; change < 4; change++)
+                                    for (var team = 1; team < 4; team++)
+                                    {
+                                        var statusClass = productionPlans?.FirstOrDefault(
+                                                p => p.Date == DateOnly.FromDateTime(day) &&
+                                                     p.Change == change && p.Team == team)?.Status!.Id switch
+                                            {
+                                                1 => "status-inprogress",
+                                                3 => "status-planned",
+                                                _ => ""
+                                            };
 
-                        var locChange = change;
-                        var locTeam = team;
-                        <div class="grid-item @statusClass" @onclick="() => OnGridItemClick(day, locChange, locTeam)">&nbsp;</div>
-                        }
-                    </div>
-                </div>
-            </td>
-            }
-            else
-            {
-            <td>&nbsp;</td>
-            }
-            }
-        </tr>
+                                        var locChange = change;
+                                        var locTeam = team;
+                                        <div class="grid-item @statusClass" @onclick="() => OnGridItemClick(day, locChange, locTeam)">&nbsp;</div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                    }
+                    else
+                    {
+                        <td>&nbsp;</td>
+                    }
+                }
+            </tr>
         }
         </tbody>
     </table>
@@ -144,11 +144,12 @@
 
 @code {
     private List<DateTime>? DaysOfMonth { get; set; }
-    private DateTime CurrentDate { get; set; } = DateTime.Now;
+    public DateTime CurrentDate { get; set; } = DateTime.Now;
     private List<GetProductionPlanForCalendar>? productionPlans;
     private DateOnly CurrentDay => DateOnly.FromDateTime(DateTime.Now);
 
     [Parameter] public EventCallback<(DateOnly date, int change, int team)> OnItemClick { get; set; }
+    [Parameter] public EventCallback OnMonthChanged { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -195,6 +196,7 @@
     {
         CurrentDate = CurrentDate.AddMonths(-1);
         UpdateDaysOfMonth();
+        await OnMonthChanged.InvokeAsync();
         await LoadProductionPlans();
     }
 
@@ -202,6 +204,7 @@
     {
         CurrentDate = CurrentDate.AddMonths(1);
         UpdateDaysOfMonth();
+        await OnMonthChanged.InvokeAsync();
         await LoadProductionPlans();
     }
 
@@ -209,5 +212,4 @@
     {
         await OnItemClick.InvokeAsync((DateOnly.FromDateTime(date), change, team));
     }
-
 }

@@ -45,6 +45,7 @@
             <th scope="col">Wersja wykonania</th>
             <th scope="col">Warsztat hutnika</th>
             <th scope="col">Ilość godz</th>
+            <th scope="col">Ilość szt.</th>
             <th scope="col">Waga netto</th>
             <th scope="col">Waga brutto</th>
             <th scope="col">Norma</th>
@@ -72,16 +73,19 @@
                     </select>
                 </td>
                 <td>
-                    <input type="number" class="form-control" id="name" @bind="item.NumberOfHours">
+                    <input type="number" class="form-control" @bind="item.NumberOfHours">
                 </td>
                 <td>
-                    <input type="number" class="form-control" id="name" @bind="item.DocumentPosition.LampshadeNorm.WeightNetto">
+                    <input type="number" class="form-control">
                 </td>
                 <td>
-                    <input type="number" class="form-control" id="name" @bind="item.DocumentPosition.LampshadeNorm.WeightBrutto">
+                    <input type="number" class="form-control" @bind="item.DocumentPosition.LampshadeNorm.WeightNetto">
                 </td>
                 <td>
-                    <input type="number" class="form-control" id="name" @bind="item.DocumentPosition.LampshadeNorm.QuantityPerChange">
+                    <input type="number" class="form-control" @bind="item.DocumentPosition.LampshadeNorm.WeightBrutto">
+                </td>
+                <td>
+                    <input type="number" class="form-control" @bind="item.DocumentPosition.LampshadeNorm.QuantityPerChange">
                 </td>
                 <td>@item.DocumentPosition.Client</td>
                 <td>@item.DocumentPosition.Remarks</td>
