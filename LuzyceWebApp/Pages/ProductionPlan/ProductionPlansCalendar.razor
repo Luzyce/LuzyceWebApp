@@ -111,8 +111,8 @@
                             <div class="day-number">@day.Day</div>
                             <div class="day-container">
                                 <div class="grid-container">
-                                    @for (var change = 1; change < 4; change++)
-                                    for (var team = 1; team < 4; team++)
+                                    @for (var team = 1; team < 4; team++)
+                                    for (var change = 1; change < 4; change++)
                                     {
                                         var statusClass = productionPlans?.FirstOrDefault(
                                                 p => p.Date == DateOnly.FromDateTime(day) &&

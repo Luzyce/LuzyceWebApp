@@ -76,7 +76,7 @@
                     <input type="number" class="form-control" @bind="item.NumberOfHours">
                 </td>
                 <td>
-                    <input type="number" class="form-control">
+                    <input type="number" class="form-control" @bind="item.Quantity">
                 </td>
                 <td>
                     <input type="number" class="form-control" @bind="item.DocumentPosition.LampshadeNorm.WeightNetto">
@@ -117,7 +117,7 @@
     private string DateString => Date.ToString("d", new CultureInfo("pl-PL"));
     private GetProductionPlan? GetProductionPlanPositions { get; set; }
     private List<GetUserResponseDto>? ShiftSupervisors;
-    private int ShiftSupervisorId { get; set; }
+    private int? ShiftSupervisorId { get; set; }
     private List<GetUserResponseDto>? HeadsOfMetallurgicalTeams { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -129,7 +129,7 @@
             Team = Team
         });
 
-        ShiftSupervisorId = GetProductionPlanPositions?.ShiftSupervisor?.Id ?? 0;
+        ShiftSupervisorId = GetProductionPlanPositions?.ShiftSupervisor?.Id ?? null;
 
         ShiftSupervisors = await ProductionPlanService.GetShiftSupervisorsAsync();
         HeadsOfMetallurgicalTeams = await ProductionPlanService.GetHeadsOfMetallurgicalTeamsAsync();
@@ -138,7 +138,7 @@
     private async Task DeletePosition(int id)
     {
         await ProductionPlanService.DeletePositionAsync(id);
-        GetProductionPlanPositions = await ProductionPlanService.GetPositionsAsync(new GetProductionPlanPositionsRequest()
+        GetProductionPlanPositions = await ProductionPlanService.GetPositionsAsync(new GetProductionPlanPositionsRequest
         {
             Change = Change,
             Date = Date,
@@ -146,7 +146,7 @@
         });
         StateHasChanged();
     }
-    
+     
     private async Task OnSave()
     {
         var resp = await ProductionPlanService.UpdateProductionPlan(new UpdateProductionPlan
@@ -157,6 +157,7 @@
                 .Select(position => new UpdateInfoInProductionPlanPosition
                 {
                     Id = position.Id,
+                    Quantity = position.Quantity,
                     GetHeadsOfMetallurgicalTeamsId = position.HeadsOfMetallurgicalTeamsId,
                     NumberOfHours = position.NumberOfHours,
                     WeightNetto = position.DocumentPosition.LampshadeNorm.WeightNetto,
