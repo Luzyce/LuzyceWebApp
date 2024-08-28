@@ -8,6 +8,7 @@
 @inject OrderService OrderService
 @inject ProductionOrderService ProductionOrderService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JS
 
 @if (orders == null)
 {
@@ -98,49 +99,83 @@
                 <tbody>
                 @foreach (var position in selectedOrder.Positions)
                 {
-                var (klosz, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
-                variantIds[position.Id] = lastMatchingVariantId ?? 0;
-                dekors[position.Id] = dekor;
+                    var (klosz, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
+                    variantIds[position.Id] = lastMatchingVariantId ?? 0;
+                    dekors[position.Id] = dekor;
 
-                <tr>
-                    <td><div style="width: 300px;">@position.Symbol @position.ProductName</div></td>
-                    <td>
-                        <input type="text" class="form-control symbol-input"
-                               value="@klosz" />
-                    </td>
-                    <td>
-                        <select class="form-control wariant-input"
-                                value="@variantIds[position.Id]"
-                                @onchange="(e) => OnVariantChanged(position.Id, e)">
-                            <option value="" disabled selected></option>
-                            @foreach (var variant in variants!.Variants)
-                            {
-                            <option value="@variant.Id">@variant.Name</option>
-                            }
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control symbol-input"
-                               value="@dekors[position.Id]"
-                               @oninput="(e) => OnDekorChanged(position.Id, e)" />
-                    </td>
-                    <td>@($"{position.Quantity:0}") @position.Unit</td>
-                    @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
+                    int productionOrderQuantity;
+                    
+                    if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
                     {
-                        <td style="@GetBackgroundColor(productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity, position.Quantity)">
-                            <a type="button" class="btn" @onclick="() => quantitiesInStockComponent?.ShowStockModal(productWarehousesStocks[position.OrderPositionLp.Value - 1], position.Unit!)!">
-                                @productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity @position.Unit
-                            </a>
-                        </td>
+                        productionOrderQuantity = 
+                            (int)Math.Max(
+                                position.Quantity - 
+                                productWarehousesStocks[position.OrderPositionLp!.Value - 1].Quantity, 0);
                     } else {
-                        <td></td>
-                    }                
-                    <td>
-                        <input type="number" class="form-control narrow-input" min="0"
-                               value="@ProductionOrderPositions.GetValueOrDefault(position.Id, 0)"
-                               @oninput="(e) => OnQuantityInput(position.Id, e)"/>
-                    </td>
-                </tr>
+                        productionOrderQuantity = 0;
+                    }
+                    
+                    var normExists = true;
+                    var norm = 0;
+
+                    if (norm > 0)
+                    {
+                        productionOrderQuantity = (int)Math.Ceiling((decimal)productionOrderQuantity / norm) * norm;
+                    }
+                    else
+                    {
+                        normExists = false;
+                    }
+
+                    <tr>
+                        <td>
+                            <div style="width: 300px;">@position.Symbol @position.ProductName</div>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control symbol-input"
+                                   value="@klosz"/>
+                        </td>
+                        <td>
+                            <select class="form-control wariant-input"
+                                    value="@variantIds[position.Id]"
+                                    @onchange="(e) => OnVariantChanged(position.Id, e)">
+                                <option value="" disabled selected></option>
+                                @foreach (var variant in variants!.Variants)
+                                {
+                                    <option value="@variant.Id">@variant.Name</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="form-control symbol-input"
+                                   value="@dekors[position.Id]"
+                                   @oninput="(e) => OnDekorChanged(position.Id, e)"/>
+                        </td>
+                        <td>@($"{position.Quantity:0}") @position.Unit</td>
+                        @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
+                        {
+                            <td style="@GetBackgroundColor(productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity, position.Quantity)">
+                                <a type="button" class="btn" @onclick="() => quantitiesInStockComponent?.ShowStockModal(productWarehousesStocks[position.OrderPositionLp.Value - 1], position.Unit!)!">
+                                    @productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity @position.Unit
+                                </a>
+                            </td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                        <td>
+                            <input style="display: inline-block" type="number" class="form-control narrow-input" min="0"
+                                   value="@productionOrderQuantity"
+                                   @oninput="(e) => OnQuantityInput(position.Id, e)"/>
+                            @if (!normExists)
+                            {
+                                <svg style="display: inline-block" data-bs-toggle="tooltip" data-bs-title="Norma nie istnieje" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                                </svg> 
+                            }
+                        </td>
+                    </tr>
                 }
                 </tbody>
             </table>
@@ -152,7 +187,14 @@
     </div>
 </div>
 
-<QuantitiesInStock @ref="quantitiesInStockComponent" />
+<script>
+    function initTooltips() {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    }
+</script>
+
+<QuantitiesInStock @ref="quantitiesInStockComponent"/>
 
 @code {
     private GetOrdersResponseDto? orders;
@@ -188,6 +230,9 @@
         {
             await LoadWarehouseQuantities(selectedOrder);
         }
+        
+        await JS.InvokeVoidAsync("initTooltips");
+
         StateHasChanged();
     }
 
@@ -253,7 +298,7 @@
         endDate = DateTime.Parse(e.Value?.ToString() ?? "");
         await LoadOrders(pageNumber: 1);
     }
-    
+
     private async Task OnStatusInput(ChangeEventArgs e)
     {
         status = int.Parse(e.Value?.ToString() ?? "1");
@@ -335,7 +380,7 @@
             Console.WriteLine("Error");
         }
     }
-    
+
     private (string klosz, int? lastMatchingVariantId, string dekor) GetMatchingVariantInfo(string symbol)
     {
         var regexMatch = Regex.Match(symbol, @"^[A-Z]{2}\-?\d[^\-\/\ ]{2,}");
@@ -349,7 +394,7 @@
                 .Where(variant => symbol.Contains(variant.ShortName))
                 .Select(variant => variant.Id)
                 .LastOrDefault();
-        
+
             if (lastMatchingVariantId != null)
             {
                 var matchingVariant = variants.Variants
@@ -376,6 +421,7 @@
         {
             variantIds[positionId] = newVariantId;
         }
+
         StateHasChanged();
     }
 
@@ -386,7 +432,7 @@
         StateHasChanged();
     }
 
-    string GetBackgroundColor(decimal stockQuantity, decimal orderQuantity)
+    private static string GetBackgroundColor(decimal stockQuantity, decimal orderQuantity)
     {
         var ratio = stockQuantity / orderQuantity;
 
@@ -397,4 +443,5 @@
             _ => ""
         };
     }
+
 }
