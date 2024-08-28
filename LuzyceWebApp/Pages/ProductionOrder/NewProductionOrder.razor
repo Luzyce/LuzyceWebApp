@@ -11,9 +11,7 @@
 
 @if (orders == null)
 {
-    <p>
-        <em>Loading...</em>
-    </p>
+    <Loader @ref="loader"/>
     return;
 }
 
@@ -30,6 +28,14 @@
     <div class="col form-group">
         <label>Data końcowa:</label>
         <input type="date" class="form-control" @bind="endDate" @oninput="OnEndDateInput" disabled="@isAnyProductionOrderPositions"/>
+    </div>
+    <div class="col form-group">
+        <label>Stany:</label>
+        <select class="form-select" @bind="status" @oninput="OnStatusInput" disabled="@isAnyProductionOrderPositions">
+            <option value="1">Otwarte</option>
+            <option value="2">Zamknięte</option>
+            <option value="3">Wszystkie</option>
+        </select>
     </div>
 </div>
 <br>
@@ -119,12 +125,16 @@
                                @oninput="(e) => OnDekorChanged(position.Id, e)" />
                     </td>
                     <td>@($"{position.Quantity:0}") @position.Unit</td>
-                    <td>
-                        @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
-                        {
-                            <a type="button" class="btn" @onclick="() => quantitiesInStockComponent.ShowStockModal(productWarehousesStocks[position.OrderPositionLp.Value - 1], position.Unit!)">@productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity @position.Unit</a>
-                        }
-                    </td>
+                    @if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
+                    {
+                        <td style="@GetBackgroundColor(productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity, position.Quantity)">
+                            <a type="button" class="btn" @onclick="() => quantitiesInStockComponent?.ShowStockModal(productWarehousesStocks[position.OrderPositionLp.Value - 1], position.Unit!)!">
+                                @productWarehousesStocks[position.OrderPositionLp.Value - 1].Quantity @position.Unit
+                            </a>
+                        </td>
+                    } else {
+                        <td></td>
+                    }                
                     <td>
                         <input type="number" class="form-control narrow-input" min="0"
                                value="@ProductionOrderPositions.GetValueOrDefault(position.Id, 0)"
@@ -151,6 +161,7 @@
     private int selectedOrderId;
     private DateTime? startDate;
     private DateTime? endDate;
+    private int status = 1;
     private readonly Dictionary<int, int> ProductionOrderPositions = new Dictionary<int, int>();
     private bool isAnyProductionOrderPositions;
     private CreateProductionOrderRequest? productionOrderDto;
@@ -158,8 +169,9 @@
     private readonly Dictionary<int, int> variantIds = new();
     private readonly Dictionary<int, string> dekors = new();
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
-    private QuantitiesInStock quantitiesInStockComponent;
-    
+    private QuantitiesInStock? quantitiesInStockComponent;
+    private Loader? loader;
+
     private CancellationTokenSource cts = new CancellationTokenSource();
 
     protected override async Task OnInitializedAsync()
@@ -191,7 +203,8 @@
             {
                 CustomerName = customerName,
                 StartDate = startDate,
-                EndDate = endDate
+                EndDate = endDate,
+                Status = status
             };
             orders = await OrderService.GetOrdersAsync(pageNumber, getOrdersDto, token);
             selectedOrder = null;
@@ -238,6 +251,12 @@
     private async Task OnEndDateInput(ChangeEventArgs e)
     {
         endDate = DateTime.Parse(e.Value?.ToString() ?? "");
+        await LoadOrders(pageNumber: 1);
+    }
+    
+    private async Task OnStatusInput(ChangeEventArgs e)
+    {
+        status = int.Parse(e.Value?.ToString() ?? "1");
         await LoadOrders(pageNumber: 1);
     }
 
@@ -367,4 +386,15 @@
         StateHasChanged();
     }
 
+    string GetBackgroundColor(decimal stockQuantity, decimal orderQuantity)
+    {
+        var ratio = stockQuantity / orderQuantity;
+
+        return ratio switch
+        {
+            >= 0.9m and <= 1.1m => "background-color: yellow;",
+            > 1.1m => "background-color: green;",
+            _ => ""
+        };
+    }
 }
