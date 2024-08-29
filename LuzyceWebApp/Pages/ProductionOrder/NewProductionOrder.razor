@@ -81,7 +81,7 @@
         </nav>
     </div>
     <div class="col-md-8">
-        @if (selectedOrder != null)
+        @if (selectedOrder != null && selectedOrderLoaded)
         {
             <h3>Pozycje dla @selectedOrder.Number</h3>
             <table class="table">
@@ -99,17 +99,15 @@
                 <tbody>
                 @foreach (var position in selectedOrder.Positions)
                 {
-                    var (klosz, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
-                    variantIds[position.Id] = lastMatchingVariantId ?? 0;
-                    dekors[position.Id] = dekor;
-                    
                     <tr>
                         <td>
                             <div style="width: 300px;">@position.Symbol @position.ProductName</div>
                         </td>
                         <td>
-                            <input type="text" class="form-control symbol-input"
-                                   value="@klosz"/>
+                            <input type="text" 
+                                   class="form-control symbol-input"
+                                   value="@lampshades[position.Id]"
+                                   @oninput="(e) => OnLampshadeChanged(position.Id, e)"/>
                         </td>
                         <td>
                             <select class="form-control wariant-input"
@@ -148,12 +146,9 @@
 
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" @onclick="() => CalculateProductionOrderQuantity(position)">Wylicz</button>
-                                    <svg data-bs-toggle="tooltip" data-bs-title="Norma nie istnieje" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-exclamation-triangle-fill ml-2" viewBox="0 0 16 16">
-                                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-                                    </svg>
                                 </div>
+                                <div class="noNormWarning"></div>
                             </div>
-
                         </td>
                     </tr>
                 }
@@ -182,6 +177,12 @@
         }
     }
 
+    function setInnerHtml(positionId, svgContent) {
+        var noNormWarning = document.querySelector(`input[data-position-id="${positionId}"]`).parentElement.querySelector('.noNormWarning');
+        if (noNormWarning) {
+            noNormWarning.innerHTML = svgContent;
+        }
+    }
 </script>
 
 <QuantitiesInStock @ref="quantitiesInStockComponent"/>
@@ -200,9 +201,11 @@
     private GetVariantsResponseDto? variants;
     private readonly Dictionary<int, int> variantIds = new();
     private readonly Dictionary<int, string> dekors = new();
+    private readonly Dictionary<int, string> lampshades = new();
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
     private QuantitiesInStock? quantitiesInStockComponent;
     private Loader? loader;
+    private bool selectedOrderLoaded = false;
 
     private CancellationTokenSource cts = new CancellationTokenSource();
 
@@ -214,14 +217,27 @@
 
     private async Task SelectOrder(int orderId)
     {
+        selectedOrderLoaded = false;
         selectedOrderId = orderId;
         selectedOrder = orders?.Orders.FirstOrDefault(o => o.Id == orderId);
         if (selectedOrder != null)
         {
+            lampshades.Clear();
+            variantIds.Clear();
+            dekors.Clear();
+            
+            foreach (var position in selectedOrder.Positions)
+            {
+                var (lampshade, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
+                lampshades.Add(position.Id, lampshade);
+                variantIds.Add(position.Id, lastMatchingVariantId ?? 0);
+                dekors.Add(position.Id, dekor);
+            }
+            
             await LoadWarehouseQuantities(selectedOrder);
+            
+            selectedOrderLoaded = true;
         }
-        
-        await JS.InvokeVoidAsync("initTooltips");
 
         StateHasChanged();
     }
@@ -262,12 +278,6 @@
         if (stockResponse != null)
         {
             productWarehousesStocks = stockResponse.ProductWarehousesStocks;
-
-            Console.WriteLine("productWarehousesStocks:");
-            foreach (var productWarehouseStock in productWarehousesStocks)
-            {
-                Console.WriteLine($"ProductId: {productWarehouseStock.ProductId}, Quantity: {productWarehouseStock.Quantity}");
-            }
         }
     }
 
@@ -318,12 +328,6 @@
 
         isAnyProductionOrderPositions = ProductionOrderPositions.Values.Any(quantity => quantity != 0);
 
-        Console.WriteLine("ProductionOrderPositions:");
-        foreach (var position in ProductionOrderPositions)
-        {
-            Console.WriteLine($"PositionId: {position.Key}, Quantity: {position.Value}");
-        }
-
         StateHasChanged();
     }
 
@@ -350,7 +354,7 @@
                 .Select(position => new CreateProductionOrder
                 {
                     DocumentPositionId = position.Id,
-                    Symbol = Regex.Match(position.Symbol, @"^[A-Z]{2}\d{4}").Value,
+                    Symbol = lampshades[position.Id],
                     VariantId = variantIds[position.Id],
                     Dekor = dekors[position.Id],
                     Gross = (int)position.Quantity,
@@ -368,6 +372,7 @@
         {
             Console.WriteLine("Error");
         }
+        StateHasChanged();
     }
 
     private (string klosz, int? lastMatchingVariantId, string dekor) GetMatchingVariantInfo(string symbol)
@@ -406,11 +411,10 @@
 
     private void OnVariantChanged(int positionId, ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var newVariantId))
-        {
-            variantIds[positionId] = newVariantId;
-        }
-
+        if (!int.TryParse(e.Value?.ToString(), out var newVariantId)) return;
+        
+        variantIds[positionId] = newVariantId;
+            
         StateHasChanged();
     }
 
@@ -418,6 +422,13 @@
     {
         var newDekor = e.Value?.ToString() ?? "";
         dekors[positionId] = newDekor;
+        StateHasChanged();
+    }
+    
+    private void OnLampshadeChanged(int positionId, ChangeEventArgs e)
+    {
+        var newLampshade = e.Value?.ToString() ?? "";
+        lampshades[positionId] = newLampshade;
         StateHasChanged();
     }
 
@@ -433,10 +444,10 @@
         };
     }
 
-    private void CalculateProductionOrderQuantity(GetOrderPositionResponseDto position)
+    private async void CalculateProductionOrderQuantity(GetOrderPositionResponseDto position)
     {
         int productionOrderQuantity;
-                    
+                 
         if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
         {
             productionOrderQuantity = 
@@ -446,9 +457,18 @@
         } else {
             productionOrderQuantity = 0;
         }
-                    
-        var normExists = true;
-        var norm = 0;
+                 
+        var getNorms = new GetNorms();
+    
+        getNorms.Norms.Add(new GetNorm
+        {
+            Lampshade = lampshades[position.Id],
+            Variant = variants!.Variants.FirstOrDefault(v => v.Id == variantIds[position.Id])?.ShortName ?? "",
+        });
+    
+        var getNormsResponse = await ProductionOrderService.GetNormsAsync(getNorms);
+    
+        var norm = getNormsResponse?.Norms.FirstOrDefault()?.Norm ?? 0;
 
         if (norm > 0)
         {
@@ -456,11 +476,16 @@
         }
         else
         {
-            normExists = false;
+            await JS.InvokeVoidAsync("setInnerHtml", position.Id, @"
+                <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='red' class='bi bi-exclamation-triangle-fill ml-2' viewBox='0 0 16 16'>
+                    <path d='M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2'/>
+                </svg>
+            ");
+            await JS.InvokeVoidAsync("initTooltips");
         }
-        
+    
         OnQuantityInput(position.Id, new ChangeEventArgs { Value = productionOrderQuantity.ToString() });
-        JS.InvokeVoidAsync(
+        await JS.InvokeVoidAsync(
             "setInputValue", 
             position.Id, 
             productionOrderQuantity == 0 ? "" : productionOrderQuantity.ToString());
