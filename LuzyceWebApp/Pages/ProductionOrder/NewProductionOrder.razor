@@ -102,31 +102,7 @@
                     var (klosz, lastMatchingVariantId, dekor) = GetMatchingVariantInfo(position.Symbol);
                     variantIds[position.Id] = lastMatchingVariantId ?? 0;
                     dekors[position.Id] = dekor;
-
-                    int productionOrderQuantity;
                     
-                    if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
-                    {
-                        productionOrderQuantity = 
-                            (int)Math.Max(
-                                position.Quantity - 
-                                productWarehousesStocks[position.OrderPositionLp!.Value - 1].Quantity, 0);
-                    } else {
-                        productionOrderQuantity = 0;
-                    }
-                    
-                    var normExists = true;
-                    var norm = 0;
-
-                    if (norm > 0)
-                    {
-                        productionOrderQuantity = (int)Math.Ceiling((decimal)productionOrderQuantity / norm) * norm;
-                    }
-                    else
-                    {
-                        normExists = false;
-                    }
-
                     <tr>
                         <td>
                             <div style="width: 300px;">@position.Symbol @position.ProductName</div>
@@ -165,15 +141,19 @@
                             <td></td>
                         }
                         <td>
-                            <input style="display: inline-block" type="number" class="form-control narrow-input" min="0"
-                                   value="@productionOrderQuantity"
-                                   @oninput="(e) => OnQuantityInput(position.Id, e)"/>
-                            @if (!normExists)
-                            {
-                                <svg style="display: inline-block" data-bs-toggle="tooltip" data-bs-title="Norma nie istnieje" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
-                                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-                                </svg> 
-                            }
+                            <div class="input-group mb-3">
+                                <input type="number" class="form-control narrow-input" min="0"
+                                       data-position-id="@position.Id"
+                                       @oninput="(e) => OnQuantityInput(position.Id, e)"/>
+
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" @onclick="() => CalculateProductionOrderQuantity(position)">Wylicz</button>
+                                    <svg data-bs-toggle="tooltip" data-bs-title="Norma nie istnieje" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-exclamation-triangle-fill ml-2" viewBox="0 0 16 16">
+                                        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                                    </svg>
+                                </div>
+                            </div>
+
                         </td>
                     </tr>
                 }
@@ -182,8 +162,10 @@
         }
         <div class="btn-right">
             <button class="btn btn-secondary" @onclick="OnReset" disabled="@(!isAnyProductionOrderPositions)">Zresetuj</button>
+            <button class="btn btn-primary" @onclick="OnCalculateAll">Wylicz wszystko</button>
             <button class="btn btn-primary" @onclick="OnSave" disabled="@(!isAnyProductionOrderPositions)">Zapisz</button>
         </div>
+
     </div>
 </div>
 
@@ -192,6 +174,14 @@
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
         const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
     }
+    
+    function setInputValue(positionId, value) {
+        var input = document.querySelector(`input[data-position-id="${positionId}"]`);
+        if (input) {
+            input.value = value;
+        }
+    }
+
 </script>
 
 <QuantitiesInStock @ref="quantitiesInStockComponent"/>
@@ -337,18 +327,17 @@
         StateHasChanged();
     }
 
-    private Task OnReset()
+    private async Task OnReset()
     {
         ProductionOrderPositions.Clear();
-
+        
         foreach (var position in selectedOrder?.Positions ?? Enumerable.Empty<GetOrderPositionResponseDto>())
         {
-            ProductionOrderPositions[position.Id] = 0;
+            await JS.InvokeVoidAsync("setInputValue", position.Id, "");
         }
 
         isAnyProductionOrderPositions = false;
         StateHasChanged();
-        return Task.CompletedTask;
     }
 
     private async Task OnSave()
@@ -444,4 +433,52 @@
         };
     }
 
+    private void CalculateProductionOrderQuantity(GetOrderPositionResponseDto position)
+    {
+        int productionOrderQuantity;
+                    
+        if (position.OrderPositionLp != null && position.OrderPositionLp.Value - 1 >= 0 && position.OrderPositionLp.Value - 1 < productWarehousesStocks.Count)
+        {
+            productionOrderQuantity = 
+                (int)Math.Max(
+                    position.Quantity - 
+                    productWarehousesStocks[position.OrderPositionLp!.Value - 1].Quantity, 0);
+        } else {
+            productionOrderQuantity = 0;
+        }
+                    
+        var normExists = true;
+        var norm = 0;
+
+        if (norm > 0)
+        {
+            productionOrderQuantity = (int)Math.Ceiling((decimal)productionOrderQuantity / norm) * norm;
+        }
+        else
+        {
+            normExists = false;
+        }
+        
+        OnQuantityInput(position.Id, new ChangeEventArgs { Value = productionOrderQuantity.ToString() });
+        JS.InvokeVoidAsync(
+            "setInputValue", 
+            position.Id, 
+            productionOrderQuantity == 0 ? "" : productionOrderQuantity.ToString());
+    }
+    
+    private Task OnCalculateAll()
+    {
+        if (selectedOrder?.Positions == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        foreach (var position in selectedOrder.Positions)
+        {
+            CalculateProductionOrderQuantity(position);
+        }
+
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
 }
