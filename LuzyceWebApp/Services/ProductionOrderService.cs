@@ -24,14 +24,20 @@ public class ProductionOrderService(HttpClient httpClient, TokenValidationServic
         return await httpClient.GetFromJsonAsync<GetProductionOrder>($"/api/productionOrder/{id}");
     }
     
-    public async Task<bool> CreateProductionOrderAsync(CreateProductionOrderRequest createProductionOrderDto)
+    public async Task<int?> CreateProductionOrderAsync(CreateProductionOrderRequest createProductionOrderDto)
     {
         if (!await tokenValidationService.IsTokenValid())
         {
-            return false;
+            return null;
         }
+        
         var response = await httpClient.PostAsJsonAsync("/api/productionOrder/new", createProductionOrderDto);
-        return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<int>();
+        }
+
+        return null;
     }
     
     public async Task<bool> UpdateProductionOrderAsync(int id, UpdateProductionOrder updateProductionOrderDto)
