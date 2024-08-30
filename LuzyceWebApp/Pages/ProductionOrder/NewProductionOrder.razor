@@ -182,6 +182,11 @@
             noNormWarning.innerHTML = svgContent;
         }
     }
+
+    function clearWarnings() {
+        const warningElements = document.querySelectorAll('.noNormWarning');
+        warningElements.forEach(el => el.innerHTML = '');
+    }
 </script>
 
 <QuantitiesInStock @ref="quantitiesInStockComponent"/>
@@ -338,6 +343,8 @@
         {
             await JS.InvokeVoidAsync("setInputValue", position.Id, "");
         }
+        
+        await JS.InvokeVoidAsync("clearWarnings");
 
         isAnyProductionOrderPositions = false;
         StateHasChanged();
@@ -465,7 +472,7 @@
         getNorms.Norms.Add(new GetNorm
         {
             Lampshade = lampshades[position.Id],
-            Variant = variants!.Variants.FirstOrDefault(v => v.Id == variantIds[position.Id])?.ShortName ?? "",
+            Variant = variants!.Variants.FirstOrDefault(v => v.Id == variantIds[position.Id])?.Name ?? ""
         });
     
         var getNormsResponse = await ProductionOrderService.GetNormsAsync(getNorms);
