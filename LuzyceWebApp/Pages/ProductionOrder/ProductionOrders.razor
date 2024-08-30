@@ -1,4 +1,5 @@
 ﻿@page "/productionOrders"
+@using System.Globalization
 @using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
 @inject ProductionOrderService ProductionOrderService
@@ -18,21 +19,33 @@ return;
 <table class="table">
     <thead>
     <tr>
-        <th>ID</th>
-        <th>Numer</th>
+        <th>Data Zam (Subiekt)</th>
+        <th>Numer Zam</th>
+        <th>Nazwa Klienta</th>
+        <th>Data Zlec</th>
+        <th>Numer Zlec</th>
+        <th>Termin Realizacji</th>
+        <th>Status</th>
         <th>Edycja</th>
     </tr>
     </thead>
     <tbody>
     @foreach (var productionOrder in productionOrders.ProductionOrders)
     {
-    <tr>
-        <td>@productionOrder.Id</td>
-        <td>@productionOrder.Number</td>
-        <td>
-            <a class="btn btn-primary btn-sm" href="@($"productionOrder/edit/{productionOrder.Id}")">Edytuj</a>
-        </td>
-    </tr>
+        <tr>
+            <td>@productionOrder.OrderDate.ToString("d", new CultureInfo("pl-PL"))</td>
+            <td>@productionOrder.OrderNumber</td>
+            <td>@productionOrder.CustomerName</td>
+            <td>@productionOrder.ProdOrderDate.ToString("d", new CultureInfo("pl-PL"))</td>
+            <td>@productionOrder.ProdOrderNumber</td>
+            <td>@productionOrder.DeliveryDate?.ToString("d", new CultureInfo("pl-PL"))</td>
+            <td>@productionOrder.Status.Name</td>
+            @* <td>@productionOrder.Id</td> *@
+            @* <td>@productionOrder.Number</td> *@
+            <td>
+                <a class="btn btn-primary btn-sm" href="@($"productionOrder/edit/{productionOrder.Id}")">Edytuj</a>
+            </td>
+        </tr>
     }
     </tbody>
 </table>
