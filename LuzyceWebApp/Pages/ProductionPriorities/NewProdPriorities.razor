@@ -215,7 +215,11 @@
 
         if (resp)
         {
-            NavigationManager.NavigateTo("/");
+            await JSRuntime.InvokeVoidAsync("alert", "Zapisano pomyślnie!");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "Wystąpił błąd podczas zapisywania.");
         }
     }
 
