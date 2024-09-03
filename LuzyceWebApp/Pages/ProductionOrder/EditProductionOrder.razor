@@ -74,10 +74,10 @@
                     </div>
                 </td>
                 <td>
-                    <input type="text" class="form-control form-small" @bind="position.MethodOfPackaging">
+                    <input type="text" class="form-control form-small" @bind="position.LampshadeNorm.MethodOfPackaging">
                 </td>
                 <td>
-                    <input type="number" class="form-control form-small" @bind="position.QuantityPerPack">
+                    <input type="number" class="form-control form-small" @bind="position.LampshadeNorm.QuantityPerPack">
                 </td>
             </tr>
         }
@@ -86,7 +86,7 @@
 </form>
 
 <div class="modal fade" id="remarksModal" tabindex="-1" aria-labelledby="remarksModal" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="exampleModalLabel">Uwagi</h1>
@@ -96,8 +96,8 @@
                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" @bind="selectedPosition.Remarks"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="UpdateRemark">Save changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="UpdateRemark">Zapisz</button>
             </div>
         </div>
     </div>
@@ -147,8 +147,8 @@
                 ExecutionDate = position.ExecutionDate,
                 QuantityMade = position.QuantityMade,
                 Remarks = position.Remarks,
-                MethodOfPackaging = position.MethodOfPackaging,
-                QuantityPerPack = position.QuantityPerPack
+                MethodOfPackaging = position.LampshadeNorm.MethodOfPackaging,
+                QuantityPerPack = position.LampshadeNorm.QuantityPerPack
             }).ToList()
         };
 
