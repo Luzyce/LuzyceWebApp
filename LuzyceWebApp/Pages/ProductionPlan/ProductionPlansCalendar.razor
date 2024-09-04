@@ -116,7 +116,7 @@
                                     {
                                         var statusClass = productionPlans?.FirstOrDefault(
                                                 p => p.Date == DateOnly.FromDateTime(day) &&
-                                                     p.Change == change && p.Team == team)?.Status!.Id switch
+                                                     p.Shift.ShiftNumber == change && p.Team == team)?.Status!.Id switch
                                             {
                                                 1 => "status-inprogress",
                                                 3 => "status-planned",

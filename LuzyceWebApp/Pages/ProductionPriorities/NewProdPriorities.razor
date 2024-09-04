@@ -17,10 +17,10 @@
     return;
 }
 
-@if (Date != default && Change != 0 && Team != 0)
+@if (Date != default && Shift != 0 && Team != 0)
 {
     <div class="alert alert-warning" role="alert">
-        Wybierasz pozycję dla @DateString Zmiana: @Change Zespół: @Team
+        Wybierasz pozycję dla @DateString Zmiana: @Shift Zespół: @Team
     </div>
 }
 
@@ -162,7 +162,7 @@
     
     [Parameter]
     [SupplyParameterFromQuery]
-    public int Change { get; set; }
+    public int Shift { get; set; }
     
     [Parameter]
     [SupplyParameterFromQuery]
@@ -251,9 +251,9 @@
     
     private async Task CheckParametersAndHandleClick()
     {
-        if (Date != default && Change != 0 && Team != 0)
+        if (Date != default && Shift != 0 && Team != 0)
         {
-            await HandleItemClick((Date, Change, Team));
+            await HandleItemClick((Date, Shift, Team));
         }
         else
         {
@@ -262,20 +262,20 @@
     }
 
 
-    private async Task HandleItemClick((DateOnly date, int change, int team) item)
+    private async Task HandleItemClick((DateOnly date, int shift, int team) item)
     {
-        var (date, change, team) = item;
+        var (date, shift, team) = item;
         var addPositionsToProductionPlan = new AddPositionsToProductionPlan
         {
             Date = date,
-            Change = change,
+            Shift = shift,
             Team = team,
             Positions = productionOrdersPositions
         };
 
         await ProdPrioritiesService.AddPositionsToProductionPlanAsync(addPositionsToProductionPlan);
         await JSRuntime.InvokeVoidAsync("closeModal");
-        NavigationManager.NavigateTo($"/productionPlan?date={date}&change={change}&team={team}");
+        NavigationManager.NavigateTo($"/productionPlan?date={date}&change={shift}&team={team}");
     }
 
 }
