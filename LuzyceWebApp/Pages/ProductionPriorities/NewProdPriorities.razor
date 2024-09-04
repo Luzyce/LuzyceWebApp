@@ -275,7 +275,7 @@
 
         await ProdPrioritiesService.AddPositionsToProductionPlanAsync(addPositionsToProductionPlan);
         await JSRuntime.InvokeVoidAsync("closeModal");
-        NavigationManager.NavigateTo($"/productionPlan?date={date}&change={shift}&team={team}");
+        NavigationManager.NavigateTo($"/productionPlan?date={date}&shift={shift}&team={team}");
     }
 
 }
