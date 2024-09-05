@@ -56,7 +56,9 @@
                 <td>@item.NumberOfChanges.ToString()!.TrimEnd('0').TrimEnd('.')</td>
                 <td>@item.ProductionOrderNumber</td>
                 <td>@item.Client</td>
-                <td>@item.Remarks</td>
+                <td>@(item.Remarks.Length > 20
+                        ? item.Remarks[..20]
+                        : item.Remarks)</td>
                 <td style="width: 80px">
                     <input type="number" class="form-control form-control-sm" min="0" @oninput="(e) => OnPositionInput(item.Id, e)">
                 </td>
