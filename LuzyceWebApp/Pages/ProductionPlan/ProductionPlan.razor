@@ -33,7 +33,9 @@
             <option value="" selected="selected">&nbsp;</option>
             @foreach (var shiftSupervisor in ShiftSupervisors)
             {
-                <option value="@shiftSupervisor.Id">@shiftSupervisor.Id - @shiftSupervisor.Name</option>
+                <option value="@shiftSupervisor.Id">
+                    @shiftSupervisor.Id - @shiftSupervisor.Name @shiftSupervisor.LastName
+                </option>
             }
         </select>
     </div>
@@ -44,7 +46,7 @@
             @foreach (var headsOfMetallurgicalTeams in HeadsOfMetallurgicalTeams)
             {
                 <option value="@headsOfMetallurgicalTeams.Id">
-                    @headsOfMetallurgicalTeams.Id - @headsOfMetallurgicalTeams.Name
+                    @headsOfMetallurgicalTeams.Id - @headsOfMetallurgicalTeams.Name @headsOfMetallurgicalTeams.LastName
                 </option>
             }
         </select>
