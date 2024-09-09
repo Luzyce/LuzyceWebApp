@@ -147,7 +147,12 @@
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary" type="button" @onclick="() => CalculateProductionOrderQuantity(position)">Wylicz</button>
                                 </div>
-                                <div class="noNormWarning"></div>
+                                @if (norms.ContainsKey(position.Id) && norms[position.Id] == 0)
+                                {
+                                    <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='red' class='bi bi-exclamation-triangle-fill ml-2' viewBox='0 0 16 16'>
+                                        <path d='M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2'/>
+                                    </svg>
+                                }
                             </div>
                         </td>
                     </tr>
@@ -175,18 +180,6 @@
             input.value = value;
         }
     }
-
-    function setInnerHtml(positionId, svgContent) {
-        var noNormWarning = document.querySelector(`input[data-position-id="${positionId}"]`).parentElement.querySelector('.noNormWarning');
-        if (noNormWarning) {
-            noNormWarning.innerHTML = svgContent;
-        }
-    }
-
-    function clearWarnings() {
-        const warningElements = document.querySelectorAll('.noNormWarning');
-        warningElements.forEach(el => el.innerHTML = '');
-    }
 </script>
 
 <QuantitiesInStock @ref="quantitiesInStockComponent"/>
@@ -206,6 +199,7 @@
     private readonly Dictionary<int, int> variantIds = new();
     private readonly Dictionary<int, string> dekors = new();
     private readonly Dictionary<int, string> lampshades = new();
+    private readonly Dictionary<int, int> norms = new();
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
     private QuantitiesInStock? quantitiesInStockComponent;
     private Loader? loader;
@@ -229,6 +223,7 @@
             lampshades.Clear();
             variantIds.Clear();
             dekors.Clear();
+            norms.Clear();
             
             foreach (var position in selectedOrder.Positions)
             {
@@ -239,6 +234,24 @@
             }
             
             await LoadWarehouseQuantities(selectedOrder);
+            
+            var getNorms = new GetNorms();
+    
+            foreach (var position in selectedOrder.Positions)
+            {
+                getNorms.Norms.Add(new GetNorm
+                {
+                    Lampshade = lampshades[position.Id],
+                    Variant = variants!.Variants.FirstOrDefault(v => v.Id == variantIds[position.Id])?.Name ?? ""
+                });
+            }
+    
+            var getNormsResponse = await ProductionOrderService.GetNormsAsync(getNorms);
+            
+            for (var i = 0; i < getNormsResponse?.Norms.Count; i++)
+            {
+                norms.Add(selectedOrder.Positions[i].Id, getNormsResponse.Norms[i].Norm);
+            }
             
             selectedOrderLoaded = true;
         }
@@ -293,16 +306,32 @@
 
     private async Task OnStartDateInput(ChangeEventArgs e)
     {
-        startDate = DateTime.Parse(e.Value?.ToString() ?? "");
+        if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
+        {
+            startDate = null; 
+        }
+        else
+        {
+            startDate = DateTime.Parse(e.Value.ToString() ?? string.Empty);
+        }
+
         await LoadOrders(pageNumber: 1);
     }
 
     private async Task OnEndDateInput(ChangeEventArgs e)
     {
-        endDate = DateTime.Parse(e.Value?.ToString() ?? "");
+        if (string.IsNullOrWhiteSpace(e.Value?.ToString()))
+        {
+            endDate = null;
+        }
+        else
+        {
+            endDate = DateTime.Parse(e.Value.ToString() ?? string.Empty);
+        }
+
         await LoadOrders(pageNumber: 1);
     }
-
+    
     private async Task OnStatusInput(ChangeEventArgs e)
     {
         status = int.Parse(e.Value?.ToString() ?? "1");
@@ -343,8 +372,6 @@
         {
             await JS.InvokeVoidAsync("setInputValue", position.Id, "");
         }
-        
-        await JS.InvokeVoidAsync("clearWarnings");
 
         isAnyProductionOrderPositions = false;
         StateHasChanged();
@@ -466,33 +493,14 @@
         } else {
             productionOrderQuantity = 0;
         }
-                 
-        var getNorms = new GetNorms();
-    
-        getNorms.Norms.Add(new GetNorm
-        {
-            Lampshade = lampshades[position.Id],
-            Variant = variants!.Variants.FirstOrDefault(v => v.Id == variantIds[position.Id])?.Name ?? ""
-        });
-    
-        var getNormsResponse = await ProductionOrderService.GetNormsAsync(getNorms);
-    
-        var norm = getNormsResponse?.Norms.FirstOrDefault()?.Norm ?? 0;
+        
+        var norm = norms.GetValueOrDefault(position.Id);
 
-        if (norm > 0)
+        if (norm != 0)
         {
             productionOrderQuantity = (int)Math.Ceiling((decimal)productionOrderQuantity / norm) * norm;
         }
-        else
-        {
-            await JS.InvokeVoidAsync("setInnerHtml", position.Id, @"
-                <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='red' class='bi bi-exclamation-triangle-fill ml-2' viewBox='0 0 16 16'>
-                    <path d='M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2'/>
-                </svg>
-            ");
-            await JS.InvokeVoidAsync("initTooltips");
-        }
-    
+        
         OnQuantityInput(position.Id, new ChangeEventArgs { Value = productionOrderQuantity.ToString() });
         await JS.InvokeVoidAsync(
             "setInputValue", 
