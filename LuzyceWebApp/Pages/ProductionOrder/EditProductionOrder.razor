@@ -27,8 +27,8 @@
             <th>Na zam.</th>
             <th>Na mag.</th>
             <th>Ilość wyk.</th>
-            <th>Ilość</th>
             <th>Ilość zmian</th>
+            <th>Ilość</th>
             <th>Ilość na zmianę</th>
             @* <th>Data wykonania</th> *@
             <th>Uwagi</th>
@@ -52,13 +52,13 @@
                     @position.QuantityOnPlans @position.Unit
                 </td>
                 <td>
+                    @UpdateNumberOfChanges(position)
+                </td>
+                <td>
                     <input type="number" class="form-control form-small" @bind="position.QuantityNetto">
                 </td>
                 <td>
-                    <input type="number" class="form-control form-small" step="0.1" @bind="position.NumberOfChanges">
-                </td>
-                <td>
-                    <input type="number" class="form-control form-small" value="@position.LampshadeNorm.QuantityPerChange" @oninput="@(e => UpdateQuantityPerChange(position.LampshadeNorm.Id, e.Value!.ToString()!))">
+                    <input type="number" class="form-control form-small" value="@position.LampshadeNorm.QuantityPerChange" @oninput="@(e => UpdateQuantityPerChange(position.LampshadeNorm.Id, e.Value!.ToString()!))" min="0">
                 </td>
                 @* <td> *@
                 @*     <input type="date" class="form-control form-small" @bind="position.ExecutionDate"> *@
@@ -140,8 +140,14 @@
         }
 
         prodOrder = await ProductionOrderService.GetProductionOrder(prodOrderId);
+
         if (prodOrder != null)
         {
+            foreach (var position in prodOrder.Positions!)
+            {
+    
+            }
+
             await LoadWarehouseQuantities();
         }
     }
@@ -214,20 +220,6 @@
         selectedPosition = position;
     }
 
-    private async void UpdateRemark()
-    {
-        var resp = await ProductionOrderService.UpdateRemarkAsync(selectedPosition.Id, new UpdateRemark
-        {
-            Remark = selectedPosition.Remarks
-        });
-        
-        if (resp)
-        {
-            await JSRuntime.InvokeVoidAsync("eval", "var modal = bootstrap.Modal.getInstance(document.getElementById('remarksModal')); modal.hide();");
-            
-        }
-    }
-
     private void ResetRemark()
     {
         selectedPosition.Remarks = selectedRemark;
@@ -242,5 +234,15 @@
     {
         await JSRuntime.InvokeVoidAsync("eval", "var modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal')); modal.hide();");
         await HandleSubmit();
+    }
+
+    private static string UpdateNumberOfChanges(GetProductionOrderPosition position)
+    {
+        if (position.LampshadeNorm.QuantityPerChange == 0)
+        {
+            return string.Empty;
+        }
+        position.NumberOfChanges = Math.Ceiling((decimal)position.QuantityNetto / position.LampshadeNorm.QuantityPerChange);
+        return position.NumberOfChanges.ToString() ?? string.Empty;
     }
 }
