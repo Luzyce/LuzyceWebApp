@@ -85,19 +85,18 @@
     <button type="submit" class="btn btn-primary">Zapisz</button>
 </form>
 
-<div class="modal fade" id="remarksModal" tabindex="-1" aria-labelledby="remarksModal" aria-hidden="true">
+<div class="modal fade" id="remarksModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="remarksModal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="exampleModalLabel">Uwagi</h1>
-                <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" @bind="selectedPosition.Remarks"></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="UpdateRemark">Zapisz</button>
+                <button type="button" class="btn btn-secondary" @onclick="ResetRemark">Zresetuj</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Zamknij</button>
             </div>
         </div>
     </div>
@@ -113,6 +112,7 @@
     private QuantitiesInStock quantitiesInStockComponent;
     private const string unit = "szt.";
     private GetProductionOrderPosition selectedPosition = new();
+    private string selectedRemark = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -193,6 +193,7 @@
     
     private void EditRemarks(GetProductionOrderPosition position)
     {
+        selectedRemark = position.Remarks;
         selectedPosition = position;
     }
 
@@ -208,5 +209,10 @@
             await JSRuntime.InvokeVoidAsync("eval", "var modal = bootstrap.Modal.getInstance(document.getElementById('remarksModal')); modal.hide();");
             
         }
+    }
+
+    private void ResetRemark()
+    {
+        selectedPosition.Remarks = selectedRemark;
     }
 }
