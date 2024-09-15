@@ -19,7 +19,7 @@
 }
 
 <h2>Edycja Zlecenia Produkcyjnego: @prodOrder!.Number</h2>
-<form @onsubmit="HandleSubmit">
+<form @onsubmit="OpenConfirmationModal">
     <table class="table">
         <thead>
         <tr>
@@ -97,6 +97,23 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" @onclick="ResetRemark">Zresetuj</button>
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Zamknij</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Potwierdzenie zapisu</h5>
+            </div>
+            <div class="modal-body">
+                Czy na pewno chcesz zapisać zmiany?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Powrót</button>
+                <button type="button" class="btn btn-primary" @onclick="ConfirmSaveChanges">Zapisz</button>
             </div>
         </div>
     </div>
@@ -214,5 +231,16 @@
     private void ResetRemark()
     {
         selectedPosition.Remarks = selectedRemark;
+    }
+
+    private async Task OpenConfirmationModal()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "var modal = new bootstrap.Modal(document.getElementById('confirmationModal')); modal.show();");
+    }
+
+    private async Task ConfirmSaveChanges()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "var modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal')); modal.hide();");
+        await HandleSubmit();
     }
 }
