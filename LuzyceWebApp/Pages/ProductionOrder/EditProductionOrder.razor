@@ -31,6 +31,7 @@
             <th>Ilość</th>
             <th>Ilość na zmianę</th>
             @* <th>Data wykonania</th> *@
+            <th>Nr Klosza u Klienta</th>
             <th>Uwagi</th>
             <th>Sposób pakowania</th>
             <th>Po ile pakowane</th>
@@ -63,6 +64,9 @@
                 @* <td> *@
                 @*     <input type="date" class="form-control form-small" @bind="position.ExecutionDate"> *@
                 @* </td> *@
+                <td>
+                    <input type="text" class="form-control form-small" @bind="position.CustomerLampshadeNumber">
+                </td>
                 <td>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control form-small" @bind="position.Remarks">
@@ -169,6 +173,7 @@
                 QuantityPerChange = position.LampshadeNorm.QuantityPerChange,
                 ExecutionDate = position.ExecutionDate,
                 QuantityMade = position.QuantityMade,
+                CustomerLampshadeNumber = position.CustomerLampshadeNumber,
                 Remarks = position.Remarks,
                 MethodOfPackaging = position.LampshadeNorm.MethodOfPackaging,
                 QuantityPerPack = position.LampshadeNorm.QuantityPerPack
