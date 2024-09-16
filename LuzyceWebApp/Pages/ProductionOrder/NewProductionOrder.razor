@@ -31,11 +31,11 @@
         <input type="date" class="form-control" @bind="endDate" @oninput="OnEndDateInput" disabled="@isAnyProductionOrderPositions"/>
     </div>
     <div class="col form-group">
-        <label>Stany:</label>
+        <label>Statusy:</label>
         <select class="form-select" @bind="status" @oninput="OnStatusInput" disabled="@isAnyProductionOrderPositions">
-            <option value="1">Otwarte</option>
-            <option value="2">Zamknięte</option>
-            <option value="3">Wszystkie</option>
+            <option value="1">Niezrealizowane</option>
+            <option value="2">Częściowo zrealizowane</option>
+            <option value="3">Zrealizowane</option>
         </select>
     </div>
 </div>
@@ -49,7 +49,12 @@
                     id="order(@order.Id)"
                     @onclick="@(isAnyProductionOrderPositions ? () => { } : () => _ = SelectOrder(order.Id))"
                     style="cursor: @(isAnyProductionOrderPositions ? "not-allowed" : "pointer")">
-                    @order.Number - @order.Date.ToString("dd.MM.yyyy")
+                    @if (order.OriginalNumber is not (null or ""))
+                    {
+                        @($"{order.Number} - {order.OriginalNumber} - {order.Date:dd.MM.yyyy}")
+                    } else {
+                        @($"{order.Number} - {order.Date:dd.MM.yyyy}")
+                    }
                     <br>
                     <span style="font-size: 0.7em;">@order.CustomerName</span>
                 </li>
