@@ -247,7 +247,12 @@
         {
             return string.Empty;
         }
-        position.NumberOfChanges = Math.Ceiling((decimal)position.QuantityNetto / position.LampshadeNorm.QuantityPerChange);
+
+        position.NumberOfChanges =
+            Math.Ceiling((decimal)position.QuantityNetto /
+                position.LampshadeNorm.QuantityPerChange * 2) / 2;
+
         return position.NumberOfChanges.ToString() ?? string.Empty;
     }
+
 }

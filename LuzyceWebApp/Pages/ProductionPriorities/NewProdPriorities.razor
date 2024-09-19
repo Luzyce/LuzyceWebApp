@@ -53,7 +53,7 @@
                 <td>@item.QuantityNetto</td>
                 <td>@item.QuantityOnPlans</td>
                 <td>@item.LampshadeNorm.QuantityPerChange</td>
-                <td>@item.NumberOfChanges.ToString()!.TrimEnd('0').TrimEnd('.')</td>
+                <td>@item.NumberOfChanges.ToString()!.TrimEnd('0').TrimEnd(',').TrimEnd('.')</td>
                 <td>@item.ProductionOrderNumber</td>
                 <td>@item.Client</td>
                 <td>@(item.Remarks.Length > 20
