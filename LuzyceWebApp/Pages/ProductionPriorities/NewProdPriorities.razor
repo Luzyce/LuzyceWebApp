@@ -30,6 +30,7 @@
     }
 </style>
 
+<div id="alertPlaceholder"></div>
 <div id="sortable-table">
     <table class="table">
         <thead>
@@ -78,7 +79,10 @@
 
 <div style="float: right;">
     <button class="btn btn-primary" @onclick="CheckParametersAndHandleClick" disabled="@IsAddButtonDisabled">Dodaj pozycje do planu prod</button>
-    <button class="btn btn-primary" @onclick="OnSave">Zapisz</button>
+    @* <button class="btn btn-primary" @onclick="OnSave">Zapisz</button> *@
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+        Zapisz
+    </button>
 </div>
 
 <div class="modal fade" id="calendarModal" tabindex="-1" aria-labelledby="calendarModalLabel" aria-hidden="true">
@@ -104,6 +108,23 @@
             </div>
             <div class="modal-body">
                 <textarea readonly="readonly" class="form-control" id="exampleFormControlTextarea1" rows="3" @bind="selectedRemark"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Potwierdzenie zapisu</h5>
+            </div>
+            <div class="modal-body">
+                Czy na pewno chcesz zapisać zmiany?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Powrót</button>
+                <button type="button" class="btn btn-primary" @onclick="OnSave">Zapisz</button>
             </div>
         </div>
     </div>
@@ -177,6 +198,26 @@
             }
         }
     };
+
+    window.showAlert = (message, type) => {
+        const alertPlaceholder = document.getElementById('alertPlaceholder');
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+        alertPlaceholder.append(wrapper);
+    };
+
+    window.closeModalById = (modalId) => {
+        const modalElement = document.getElementById(modalId);
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+    };
 </script>
 
 @code {
@@ -240,13 +281,15 @@
 
         if (resp)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Zapisano pomyślnie!");
+            await JSRuntime.InvokeVoidAsync("showAlert", "Zapisano pomyślnie!", "success");
         }
         else
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Wystąpił błąd podczas zapisywania.");
+            await JSRuntime.InvokeVoidAsync("showAlert", "Wystąpił błąd podczas zapisywania.", "danger");
         }
+        await JSRuntime.InvokeVoidAsync("closeModalById", "confirmationModal");
     }
+
 
     private void OnPositionInput(int positionId, ChangeEventArgs e)
     {
