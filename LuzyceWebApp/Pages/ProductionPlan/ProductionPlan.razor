@@ -125,7 +125,7 @@
         <tfoot>
         <tr>
             <td colspan="2"><strong>Razem:</strong></td>
-            <td><strong>@TotalHours.ToString("0.0")</strong></td>
+            <td><strong>@TotalHours</strong></td>
             <td colspan="9"></td>
         </tr>
         </tfoot>
@@ -226,7 +226,19 @@
 
     private static string CalculateHours(int quantity, int? norma)
     {
-        return norma is null or 0 ? "" : (quantity / (decimal)norma * 8).ToString("0.0");
+        if (norma is null or 0) return "";
+
+        var totalHours = quantity / (decimal)norma * 8;
+
+        var hours = (int)totalHours;
+        var minutes = (int)((totalHours - hours) * 60);
+
+        return hours switch
+        {
+            > 0 when minutes > 0 => $"{hours}h {minutes}m",
+            > 0 => $"{hours}h",
+            _ => $"{minutes}m"
+        };
     }
 
     private void OpenRemark(GetProductionPlanPosition position)
@@ -234,8 +246,25 @@
         selectedPosition = position;
     }
 
-    private decimal TotalHours => GetProductionPlanPositions?.ProductionPlanPositions
-        .Sum(item => item.DocumentPosition.LampshadeNorm.QuantityPerChange > 0
-            ? item.Quantity / (decimal)item.DocumentPosition.LampshadeNorm.QuantityPerChange * 8
-            : 0) ?? 0;
+    private string TotalHours
+    {
+        get
+        {
+            var totalHours = GetProductionPlanPositions?.ProductionPlanPositions
+                .Sum(item => item.DocumentPosition.LampshadeNorm.QuantityPerChange > 0
+                    ? item.Quantity / (decimal)item.DocumentPosition.LampshadeNorm.QuantityPerChange * 8
+                    : 0) ?? 0;
+
+            var hours = (int)totalHours;
+            var minutes = (int)((totalHours - hours) * 60);
+
+            return hours switch
+            {
+                > 0 when minutes > 0 => $"{hours}h {minutes}m",
+                > 0 => $"{hours}h",
+                _ => $"{minutes}m"
+            };
+        }
+    }
+
 }
