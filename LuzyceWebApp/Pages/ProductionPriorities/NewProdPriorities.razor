@@ -56,9 +56,17 @@
                 <td>@item.NumberOfChanges.ToString()!.TrimEnd('0').TrimEnd(',').TrimEnd('.')</td>
                 <td>@item.ProductionOrderNumber</td>
                 <td>@item.Client</td>
-                <td>@(item.Remarks.Length > 20
-                        ? item.Remarks[..20]
-                        : item.Remarks)</td>
+                <td>@if (item.Remarks.Length > 20)
+                    {
+                        <a type="button" class="btn" data-bs-toggle="modal" data-bs-target="#remarkModal" @onclick="() => OpenRemark(item)">
+                            @($"{item.Remarks[..20]}...")
+                        </a>
+                    }
+                    else
+                    {
+                        @item.Remarks
+                    }
+                </td>
                 <td style="width: 80px">
                     <input type="number" class="form-control form-control-sm" min="0" @oninput="(e) => OnPositionInput(item.Id, e)">
                 </td>
@@ -82,6 +90,20 @@
             </div>
             <div class="modal-body">
                 <ProductionPlansCalendar @ref="productionPlansCalendar" OnItemClick="HandleItemClick"/>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="remarkModal" tabindex="-1" aria-labelledby="remarkModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Uwaga</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <textarea readonly="readonly" class="form-control" id="exampleFormControlTextarea1" rows="3" @bind="selectedRemark"></textarea>
             </div>
         </div>
     </div>
@@ -176,6 +198,7 @@
     private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();
     private readonly Dictionary<int, int> productionOrdersPositions = new();
     private ProductionPlansCalendar productionPlansCalendar = new ProductionPlansCalendar();
+    private string selectedRemark = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -280,4 +303,8 @@
         NavigationManager.NavigateTo($"/productionPlan?date={date}&shift={shift}&team={team}");
     }
 
+    private void OpenRemark(GetProductionOrderPosition position)
+    {
+        selectedRemark = position.Remarks;
+    }
 }
