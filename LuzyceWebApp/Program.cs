@@ -10,7 +10,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri("https://phsapp.getin.ovh") });
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.Configuration["apiUrl"]!) });
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<IPrintingService, PrintingService>();
