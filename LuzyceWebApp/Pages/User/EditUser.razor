@@ -43,7 +43,7 @@
         </div>
         <div class="col form-group">
             <label>Role:</label>
-            <select class="form-control" @bind="user!.RoleId">
+            <select class="form-control" @bind="user!.RoleId" disabled="@user.IsLocked">
                 @foreach (var role in roles!)
                 {
                     <option value="@role.Id">@role.Name</option>
