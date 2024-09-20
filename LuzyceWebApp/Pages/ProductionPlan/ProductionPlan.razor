@@ -122,6 +122,13 @@
             </tr>
         }
         </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="2"><strong>Razem:</strong></td>
+            <td><strong>@TotalHours.ToString("0.0")</strong></td>
+            <td colspan="9"></td>
+        </tr>
+        </tfoot>
     </table>
 </div>
 
@@ -227,4 +234,8 @@
         selectedPosition = position;
     }
 
+    private decimal TotalHours => GetProductionPlanPositions?.ProductionPlanPositions
+        .Sum(item => item.DocumentPosition.LampshadeNorm.QuantityPerChange > 0
+            ? item.Quantity / (decimal)item.DocumentPosition.LampshadeNorm.QuantityPerChange * 8
+            : 0) ?? 0;
 }
