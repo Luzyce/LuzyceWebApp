@@ -274,9 +274,9 @@
 
     private async Task OnSave()
     {
-        var resp = await ProdPrioritiesService.SaveProductionPriority(new CreateProductionPriorityRequest
+        var resp = await ProdPrioritiesService.SaveProductionPriority(new UpdateProductionPrioritiesRequest
         {
-            positions = sortedList.Values.ToList()
+            Positions = sortedList.Values.ToList()
         });
 
         if (resp)

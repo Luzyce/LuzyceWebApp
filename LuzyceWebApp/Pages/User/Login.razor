@@ -47,7 +47,7 @@
 </div>
 
 @code {
-    public LoginDto User { get; set; } = new LoginDto { IpAddress = "127.0.0.1" };
+    public LoginDto User { get; set; } = new LoginDto();
     private bool showError;
     private string errorMessage = string.Empty;
     private bool isLoading = false;

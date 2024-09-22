@@ -18,13 +18,13 @@ public class ProdPrioritiesService(HttpClient httpClient, TokenValidationService
         
     }
     
-    public async Task<bool> SaveProductionPriority(CreateProductionPriorityRequest request)
+    public async Task<bool> SaveProductionPriority(UpdateProductionPrioritiesRequest request)
     {
         if (!await tokenValidationService.IsTokenValid())
         {
             return false;
         }
-        var response = await httpClient.PostAsJsonAsync("/api/productionPriority/save", request);
+        var response = await httpClient.PostAsJsonAsync("/api/updatePriorities", request);
         return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
     }
     
