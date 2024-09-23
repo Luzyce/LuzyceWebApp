@@ -86,6 +86,7 @@
                     <tr>
                         <th scope="col">Data</th>
                         <th scope="col">Operacja</th>
+                        <th scope="col">Urządzenie</th>
                         <th scope="col"></th>
                     </tr>
                     </thead>
@@ -97,7 +98,7 @@
                     <tr>
                         <th scope="row">@TimeAgo(log.Timestamp)</th>
                         <th scope="row">@log.Operation</th>
-                        @* button that will OnClick funcion and add actual log *@
+                        <th scope="row">@log.Client?.Name (@log.Client?.IpAddress)</th>
                         <th scope="row">
                             <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal" @onclick="() => AssignHash(log)">Przypisz</button>
                         </th>
@@ -200,12 +201,8 @@
             return "przed chwilą";
         if (timeSpan.TotalMinutes < 60)
             return $"{(int)timeSpan.TotalMinutes} minut temu";
-        if (timeSpan.TotalHours < 24)
-            return $"{(int)timeSpan.TotalHours} godzin temu";
-        if (timeSpan.TotalDays < 7)
-            return $"{(int)timeSpan.TotalDays} dni temu";
 
-        return dateTime.ToString("d", new CultureInfo("pl-PL"));
+        return dateTime.ToString("g", new CultureInfo("pl-PL"));
     }
 
     private void HashChanged(ChangeEventArgs e)
