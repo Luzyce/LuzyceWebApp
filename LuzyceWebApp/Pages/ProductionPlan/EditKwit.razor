@@ -18,15 +18,15 @@
 <div class="row">
     <div class="col form-group">
         <label>Ilość Netto:</label>
-        <input type="number" class="form-control" id="quantityNetto" @bind="kwit.QuantityNetto" readonly="@isReadonly">
+        <input type="number" class="form-control" id="quantityNetto" @bind="kwit.QuantityNetto" readonly="@((isReadonly || isLocked) ? true : null)">
     </div>
     <div class="col form-group">
         <label>Braki:</label>
-        <input type="number" class="form-control" id="quantityLoss" @bind="kwit.QuantityLoss" readonly="@isReadonly">
+        <input type="number" class="form-control" id="quantityLoss" @bind="kwit.QuantityLoss" readonly="@((isReadonly || isLocked))">
     </div>
     <div class="col form-group">
         <label>Ilość Do Sprawdzenia:</label>
-        <input type="number" class="form-control" id="quantityToImprove" @bind="kwit.QuantityToImprove" readonly="@isReadonly">
+        <input type="number" class="form-control" id="quantityToImprove" @bind="kwit.QuantityToImprove" readonly="@isReadonly || @isLocked">
     </div>
 </div>
 
