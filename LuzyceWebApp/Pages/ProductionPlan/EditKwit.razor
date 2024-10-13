@@ -54,6 +54,29 @@
     }
 </div>
 
+@if (kwit.Lacks is not null or { Count: > 0 })
+{
+    <br>
+    <br>
+    <table class="table table-bordered" style="max-width: 400px;">
+        <thead>
+        <tr>
+            <th>Błąd</th>
+            <th>Ilość</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var lack in kwit.Lacks)
+        {
+            <tr>
+                <td>@lack.ErrorName (@lack.ErrorShortName)</td>
+                <td>@lack.Quantity</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
 @if (request != null)
 {
     <DocumentDependencyChart Request="@request"/>
