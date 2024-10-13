@@ -1,8 +1,10 @@
 ﻿@page "/productionOrders"
 @using System.Globalization
+@using Luzyce.Core.Models.DocumentDependencyChart
 @using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
 @inject ProductionOrderService ProductionOrderService
+@inject DocumentDependencyChart DocumentDependencyChart
 
 @if (productionOrders == null)
 {
@@ -13,7 +15,7 @@ return;
 }
 
 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-    <a class="btn btn-primary" href="@($"productionOrder/new")">Nowe Zlecenie Produkcji</a>
+    <a class="btn btn-primary" href="@("productionOrder/new")">Nowe Zlecenie Produkcji</a>
 </div>
 
 <table class="table">
@@ -26,7 +28,7 @@ return;
         <th>Numer ZP</th>
         <th>Termin Realizacji</th>
         <th>Status</th>
-        <th>Edycja</th>
+        <th colspan="2">Akcje</th>
     </tr>
     </thead>
     <tbody>
@@ -45,10 +47,15 @@ return;
             <td>
                 <a class="btn btn-primary btn-sm" href="@($"productionOrder/edit/{productionOrder.Id}")">Edytuj</a>
             </td>
+            <td>
+                <a type="button" class="btn btn-primary btn-sm" @onclick="() => ShowDependencyChart(productionOrder.Id)">Wykres zależności</a>
+            </td>
         </tr>
     }
     </tbody>
 </table>
+
+<DocumentDependencyChart @ref="DocumentDependencyChart" />
 
 @code {
     private GetProductionOrdersResponse? productionOrders;
@@ -56,5 +63,12 @@ return;
     protected override async Task OnInitializedAsync()
     {
        productionOrders = await ProductionOrderService.GetProductionOrders();
+    }
+
+    private Task ShowDependencyChart(int productionOrderId)
+    {
+        var request = new GetDocumentDependencyChartRequest { DocumentId = productionOrderId, DocumentType = "Zlecenie produkcji" };
+        _ = DocumentDependencyChart.ShowDependencyChart(request);
+        return Task.CompletedTask;
     }
 }

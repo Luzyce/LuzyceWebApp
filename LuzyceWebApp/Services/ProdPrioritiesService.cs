@@ -24,7 +24,7 @@ public class ProdPrioritiesService(HttpClient httpClient, TokenValidationService
         {
             return false;
         }
-        var response = await httpClient.PostAsJsonAsync("/api/updatePriorities", request);
+        var response = await httpClient.PostAsJsonAsync("/api/productionPriority/updatePriorities", request);
         return response.IsSuccessStatusCode && response.StatusCode != HttpStatusCode.Unauthorized && response.StatusCode != HttpStatusCode.Conflict;
     }
     

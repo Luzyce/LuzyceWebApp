@@ -1,14 +1,15 @@
 ﻿@page "/productionPlan"
 @using System.Globalization
 @using Append.Blazor.Printing
+@using Luzyce.Core.Models.DocumentDependencyChart
 @using Luzyce.Core.Models.ProductionPlan
 @using Luzyce.Core.Models.User
 @using LuzyceWebApp.Services
-@using Microsoft.IdentityModel.Tokens
 @inject ProductionPlanService ProductionPlanService
 @inject NavigationManager NavigationManager
 @inject IPrintingService PrintingService
 @inject IConfiguration Configuration
+@inject DocumentDependencyChart DocumentDependencyChart
 
 @if (ShiftSupervisors == null || HeadsOfMetallurgicalTeams == null)
 {
@@ -150,6 +151,7 @@
 <a class="btn btn-secondary" href="/productionPlans" role="button">Powrót</a>
 <div style="float: right">
     <a class="btn btn-primary" href="/productionPriority/new?date=@Date&shift=@Shift&team=@Team" role="button">Dodaj pozycje</a>
+    <a type="button" class="btn btn-primary" @onclick="() => ShowDependencyChart(GetProductionPlanPositions.Id)">Wykres zależności</a>
     <a class="btn btn-primary" href="/productionPlans" role="button" @onclick="OnSave">Zapisz</a>
 </div>
 
@@ -186,6 +188,8 @@
         </div>
     </div>
 </div>
+
+<DocumentDependencyChart @ref="DocumentDependencyChart" />
 
 @code {
     [Parameter] [SupplyParameterFromQuery] public DateOnly Date { get; set; }
@@ -300,4 +304,10 @@
         }
     }
 
+    private Task ShowDependencyChart(int productionPlanId)
+    {
+        var request = new GetDocumentDependencyChartRequest { DocumentId = productionPlanId, DocumentType = "Plan produkcji" };
+        _ = DocumentDependencyChart.ShowDependencyChart(request);
+        return Task.CompletedTask;
+    }
 }

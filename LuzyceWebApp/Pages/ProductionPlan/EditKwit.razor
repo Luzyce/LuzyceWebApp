@@ -1,8 +1,10 @@
 ﻿@page "/productionPlan/editKwit"
+@using Luzyce.Core.Models.DocumentDependencyChart
 @using Luzyce.Core.Models.Kwit
 @using LuzyceWebApp.Services
 @inject NavigationManager NavManager
 @inject ProductionPlanService ProductionPlanService
+@inject DocumentDependencyChart DocumentDependencyChart
 
 @if (kwit == null)
 {
@@ -19,7 +21,7 @@
         <input type="number" class="form-control" id="quantityNetto" @bind="kwit.QuantityNetto" readonly="@isReadonly">
     </div>
     <div class="col form-group">
-        <label>Ilość Stracona:</label>
+        <label>Braki:</label>
         <input type="number" class="form-control" id="quantityLoss" @bind="kwit.QuantityLoss" readonly="@isReadonly">
     </div>
     <div class="col form-group">
@@ -40,6 +42,7 @@
 <br>
 
 <div style="float: right">
+    <a type="button" class="btn btn-primary" @onclick="() => ShowDependencyChart(kwit.Id)">Wykres zależności</a>
     <button class="btn btn-primary" style="margin-right: 10px;" @onclick="UpdateKwit" disabled="@isLocked">Zapisz</button>
     @if (!isReadonly)
     {
@@ -50,6 +53,8 @@
         <button class="btn btn-warning" @onclick="RevertKwit">Przywróć Kwit</button>
     }
 </div>
+
+<DocumentDependencyChart @ref="DocumentDependencyChart" />
 
 @code {
     [Parameter] [SupplyParameterFromQuery] public DateOnly Date { get; set; }
@@ -120,6 +125,13 @@
 
         });
         NavManager.NavigateTo($"/productionPlan?date={Date}&shift={Shift}&team={Team}");
+    }
+
+    private Task ShowDependencyChart(int kwitId)
+    {
+        var request = new GetDocumentDependencyChartRequest { DocumentId = kwitId, DocumentType = "Kwit" };
+        _ = DocumentDependencyChart.ShowDependencyChart(request);
+        return Task.CompletedTask;
     }
 
 }

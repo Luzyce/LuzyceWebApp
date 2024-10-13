@@ -224,17 +224,17 @@
     [Parameter]
     [SupplyParameterFromQuery]
     public DateOnly Date { get; set; }
-    
+
     [Parameter]
     [SupplyParameterFromQuery]
     public int Shift { get; set; }
-    
+
     [Parameter]
     [SupplyParameterFromQuery]
     public int Team { get; set; }
-    
+
     private string DateString => Date.ToString("d", new CultureInfo("pl-PL"));
-    
+
     private GetOrdersPositionsResponse? getOrdersPositionsResponse;
     private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();
     private readonly Dictionary<int, int> productionOrdersPositions = new();
@@ -316,7 +316,7 @@
     }
 
     private bool IsAddButtonDisabled => productionOrdersPositions.Count == 0;
-    
+
     private async Task CheckParametersAndHandleClick()
     {
         if (Date != default && Shift != 0 && Team != 0)

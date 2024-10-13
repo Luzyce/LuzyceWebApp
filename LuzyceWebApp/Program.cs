@@ -5,6 +5,7 @@ using LuzyceWebApp;
 using LuzyceWebApp.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Blazored.LocalStorage;
+using LuzyceWebApp.Pages;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -24,5 +25,7 @@ builder.Services.AddScoped<ProductionOrderService>();
 builder.Services.AddScoped<ProdPrioritiesService>();
 builder.Services.AddScoped<TokenRefreshService>();
 builder.Services.AddScoped<ProductionPlanService>();
+builder.Services.AddScoped<DocumentDependencyChartService>();
+builder.Services.AddSingleton<DocumentDependencyChart>();
 
 await builder.Build().RunAsync();
