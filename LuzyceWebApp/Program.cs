@@ -26,6 +26,5 @@ builder.Services.AddScoped<ProdPrioritiesService>();
 builder.Services.AddScoped<TokenRefreshService>();
 builder.Services.AddScoped<ProductionPlanService>();
 builder.Services.AddScoped<DocumentDependencyChartService>();
-builder.Services.AddSingleton<DocumentDependencyChart>();
 
 await builder.Build().RunAsync();

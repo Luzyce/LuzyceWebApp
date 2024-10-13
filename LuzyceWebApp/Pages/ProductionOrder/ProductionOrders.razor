@@ -4,7 +4,6 @@
 @using Luzyce.Core.Models.ProductionOrder
 @using LuzyceWebApp.Services
 @inject ProductionOrderService ProductionOrderService
-@inject DocumentDependencyChart DocumentDependencyChart
 
 @if (productionOrders == null)
 {
@@ -55,10 +54,14 @@ return;
     </tbody>
 </table>
 
-<DocumentDependencyChart @ref="DocumentDependencyChart" />
+@if (request != null)
+{
+    <DocumentDependencyChart Request="@request"/>
+}
 
 @code {
     private GetProductionOrdersResponse? productionOrders;
+    private GetDocumentDependencyChartRequest? request;
 
     protected override async Task OnInitializedAsync()
     {
@@ -67,8 +70,7 @@ return;
 
     private Task ShowDependencyChart(int productionOrderId)
     {
-        var request = new GetDocumentDependencyChartRequest { DocumentId = productionOrderId, DocumentType = "Zlecenie produkcji" };
-        _ = DocumentDependencyChart.ShowDependencyChart(request);
+        request = new GetDocumentDependencyChartRequest { DocumentId = productionOrderId, DocumentType = "Zlecenie produkcji" };
         return Task.CompletedTask;
     }
 }

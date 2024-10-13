@@ -2,9 +2,9 @@
 @using Luzyce.Core.Models.DocumentDependencyChart
 @using Luzyce.Core.Models.Kwit
 @using LuzyceWebApp.Services
+@using Luzyce.Core.Models.DocumentDependencyChart
 @inject NavigationManager NavManager
 @inject ProductionPlanService ProductionPlanService
-@inject DocumentDependencyChart DocumentDependencyChart
 
 @if (kwit == null)
 {
@@ -54,7 +54,10 @@
     }
 </div>
 
-<DocumentDependencyChart @ref="DocumentDependencyChart" />
+@if (request != null)
+{
+    <DocumentDependencyChart Request="@request"/>
+}
 
 @code {
     [Parameter] [SupplyParameterFromQuery] public DateOnly Date { get; set; }
@@ -69,6 +72,7 @@
     private Loader? loader;
     private bool isReadonly;
     private bool isLocked;
+    private GetDocumentDependencyChartRequest? request;
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,15 +126,13 @@
             QuantityNetto = kwit.QuantityNetto,
             QuantityLoss = kwit.QuantityLoss,
             QuantityToImprove = kwit.QuantityToImprove,
-
         });
         NavManager.NavigateTo($"/productionPlan?date={Date}&shift={Shift}&team={Team}");
     }
 
     private Task ShowDependencyChart(int kwitId)
     {
-        var request = new GetDocumentDependencyChartRequest { DocumentId = kwitId, DocumentType = "Kwit" };
-        _ = DocumentDependencyChart.ShowDependencyChart(request);
+        request = new GetDocumentDependencyChartRequest { DocumentId = kwitId, DocumentType = "Kwit" };
         return Task.CompletedTask;
     }
 

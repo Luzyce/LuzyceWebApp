@@ -12,7 +12,11 @@
 @using Blazor.Diagrams.Core.Controls.Default
 @using LuzyceWebApp.Pages.BlazorDiagrams
 @inject DocumentDependencyChartService DocumentDependencyChartService
-@inject IJSRuntime JS
+
+@if (!visible)
+{
+    return;
+}
 
 <style>
     .diagram-container {
@@ -26,40 +30,23 @@
 
 </style>
 
-<div class="modal fade" id="dependencyChartModal" tabindex="-1" aria-labelledby="dependencyChartModal" aria-hidden="true">
+<div class="modal fade show" id="dependencyChartModal" tabindex="-1" aria-labelledby="dependencyChartModal" aria-hidden="true" style="display: block">
     <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="dependencyChartModalLabel">Relacje pomiędzy dokumentami</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" @onclick="@(() => visible = false)" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="diagram-container">
-                    @if (_diagram != null)
-                    {
-                        <CascadingValue Value="_diagram" IsFixed="true" @ref="cascadingValue">
-                            <DiagramCanvas></DiagramCanvas>
-                        </CascadingValue>
-                    }
-                    else
-                    {
-                        <p>Loading diagram...</p>
-                    }
+                    <CascadingValue Value="_diagram" @ref="cascadingValue">
+                        <DiagramCanvas></DiagramCanvas>
+                    </CascadingValue>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    const dependencyChartModal = new bootstrap.Modal('#dependencyChartModal', {
-        keyboard: false
-    });
-
-    function showDependencyChartModal() {
-        dependencyChartModal.show();
-    }
-</script>
 
 @code {
     private GetDocumentDependencyChart? documentDependencyChart;
@@ -69,6 +56,11 @@
     private List<int> productionPlanIds = [];
     private string clickedDocumentType = string.Empty;
     private readonly BlazorDiagram _diagram;
+    private bool visible = false;
+
+    [Parameter]
+    [EditorRequired]
+    public GetDocumentDependencyChartRequest Request { get; set; }
 
     public DocumentDependencyChart()
     {
@@ -130,7 +122,7 @@
                 Router = new OrthogonalRouter()
             });
 
-            if (derivatives.Derivatives == null)
+            if (derivatives.Derivatives == null || derivatives.Derivatives.Count == 0)
             {
                 continue;
             }
@@ -142,7 +134,13 @@
         return Task.CompletedTask;
     }
 
-    public async Task ShowDependencyChart(GetDocumentDependencyChartRequest getDocumentDependencyChartRequest)
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await ShowDependencyChart(Request);
+    }
+
+    private async Task ShowDependencyChart(GetDocumentDependencyChartRequest getDocumentDependencyChartRequest)
     {
         productionPlanIds.Clear();
         _diagram.Nodes.Clear();
@@ -177,7 +175,7 @@
 
         await AddDocuments(derivativesList, order, _diagram, rightPort, 2);
 
-        await JS.InvokeVoidAsync("showDependencyChartModal");
+        visible = true;
         StateHasChanged();
     }
 

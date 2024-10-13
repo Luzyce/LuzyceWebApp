@@ -9,7 +9,6 @@
 @inject NavigationManager NavigationManager
 @inject IPrintingService PrintingService
 @inject IConfiguration Configuration
-@inject DocumentDependencyChart DocumentDependencyChart
 
 @if (ShiftSupervisors == null || HeadsOfMetallurgicalTeams == null)
 {
@@ -47,9 +46,9 @@
             <option value="">&nbsp;</option>
             @foreach (var headsOfMetallurgicalTeams in HeadsOfMetallurgicalTeams)
             {
-            <option value="@headsOfMetallurgicalTeams.Id">
-                @headsOfMetallurgicalTeams.Id - @headsOfMetallurgicalTeams.Name @headsOfMetallurgicalTeams.LastName
-            </option>
+                <option value="@headsOfMetallurgicalTeams.Id">
+                    @headsOfMetallurgicalTeams.Id - @headsOfMetallurgicalTeams.Name @headsOfMetallurgicalTeams.LastName
+                </option>
             }
         </select>
     </div>
@@ -73,9 +72,9 @@
             <th scope="col">Asortyment</th>
             <th scope="col">Wersja wykonania</th>
             <th scope="col">Ilość godz</th>
-            <th scope="col">Ilość szt.</th>
-            <th scope="col">Waga netto</th>
-            <th scope="col">Waga brutto</th>
+            <th scope="col">Ilość [szt]</th>
+            <th scope="col">Waga netto [kg]</th>
+            <th scope="col">Waga brutto [kg]</th>
             <th scope="col">Norma</th>
             <th scope="col" style="width: 11%">Dla firmy/mag.</th>
             <th scope="col">Uwagi</th>
@@ -139,8 +138,12 @@
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="2"><strong>Razem:</strong></td>
-            <td><strong>@TotalHours</strong></td>
+            <td colspan="2">
+                <strong>Razem:</strong>
+            </td>
+            <td>
+                <strong>@TotalHours</strong>
+            </td>
             <td colspan="9"></td>
         </tr>
         </tfoot>
@@ -189,7 +192,10 @@
     </div>
 </div>
 
-<DocumentDependencyChart @ref="DocumentDependencyChart" />
+@if (request != null)
+{
+    <DocumentDependencyChart Request="@request"/>
+}
 
 @code {
     [Parameter] [SupplyParameterFromQuery] public DateOnly Date { get; set; }
@@ -205,6 +211,7 @@
     private int? HeadsOfMetallurgicalTeamsId { get; set; }
     private List<GetUserResponseDto>? HeadsOfMetallurgicalTeams { get; set; }
     private GetProductionPlanPosition selectedPosition = new();
+    private GetDocumentDependencyChartRequest? request;
 
     protected override async Task OnInitializedAsync()
     {
@@ -306,8 +313,8 @@
 
     private Task ShowDependencyChart(int productionPlanId)
     {
-        var request = new GetDocumentDependencyChartRequest { DocumentId = productionPlanId, DocumentType = "Plan produkcji" };
-        _ = DocumentDependencyChart.ShowDependencyChart(request);
+        request = new GetDocumentDependencyChartRequest { DocumentId = productionPlanId, DocumentType = "Plan produkcji" };
         return Task.CompletedTask;
     }
+
 }
