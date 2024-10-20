@@ -52,13 +52,20 @@ public class UserService(HttpClient httpClient, TokenValidationService tokenVali
         await httpClient.PutAsJsonAsync($"api/user/{userId}/password", newPassword);
     }
 
-    public async Task CreateUserAsync(CreateUserDto user)
+    public async Task<GetUserResponseDto?> CreateUserAsync(CreateUserDto user)
     {
         if (!await tokenValidationService.IsTokenValid())
         {
-            return;
+            return null;
         }
-        await httpClient.PostAsJsonAsync("/api/user", user);
+        var response = await httpClient.PostAsJsonAsync("/api/user", user);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<GetUserResponseDto>();
+        }
+
+        return null;
     }
 
     public async Task<GetLogs> GetLogsAsync(int offset, int limit)

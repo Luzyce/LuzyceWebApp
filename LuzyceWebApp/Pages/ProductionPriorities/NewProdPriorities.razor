@@ -20,7 +20,7 @@
 @if (Date != default && Shift != 0 && Team != 0)
 {
     <div class="alert alert-warning" role="alert">
-        Wybierasz pozycję dla @DateString Zmiana: @Shift Zespół: @Team
+        Wybierasz pozycję dla @DateStringPressed Zmiana: @Shift Zespół: @Team
     </div>
 }
 
@@ -221,19 +221,14 @@
 </script>
 
 @code {
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public DateOnly Date { get; set; }
+    [Parameter] [SupplyParameterFromQuery] public string DateString { get; set; } = string.Empty;
 
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int Shift { get; set; }
+    [Parameter] [SupplyParameterFromQuery] public int Shift { get; set; }
 
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int Team { get; set; }
+    [Parameter] [SupplyParameterFromQuery] public int Team { get; set; }
 
-    private string DateString => Date.ToString("d", new CultureInfo("pl-PL"));
+    private DateOnly Date => DateOnly.ParseExact(DateString, "yyyy-MM-dd");
+    private string DateStringPressed => Date.ToString("d", new CultureInfo("pl-PL"));
 
     private GetOrdersPositionsResponse? getOrdersPositionsResponse;
     private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();

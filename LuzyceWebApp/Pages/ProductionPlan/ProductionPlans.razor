@@ -65,7 +65,7 @@
     private void HandleItemClick((DateOnly date, int shift, int team) item)
     {
         var (date, shift, team) = item;
-        Navigation.NavigateTo($"/productionPlan?date={date}&shift={shift}&team={team}");
+        Navigation.NavigateTo($"/productionPlan?dateString={date.ToString("yyyy-MM-dd")}&shift={shift}&team={team}");
     }
 
     private void PrintProductionPlan()
