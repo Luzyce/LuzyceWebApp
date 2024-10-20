@@ -21,7 +21,7 @@
 @if (GetProductionPlanPositions == null || GetProductionPlanPositions.ProductionPlanPositions.Count == 0)
 {
     <h3>Brak pozycji w planie produkcji</h3>
-    <a class="btn btn-primary" href="/productionPriority/new?date=@Date&shift=@Shift&team=@Team" role="button">Dodaj pozycje</a>
+    <a class="btn btn-primary" href="/productionPriority/new?dateString=@Date.ToString("yyyy-MM-dd")&shift=@Shift&team=@Team" role="button">Dodaj pozycje</a>
     return;
 }
 

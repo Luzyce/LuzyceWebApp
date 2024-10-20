@@ -227,8 +227,10 @@
 
     [Parameter] [SupplyParameterFromQuery] public int Team { get; set; }
 
-    private DateOnly Date => DateOnly.ParseExact(DateString, "yyyy-MM-dd");
-    private string DateStringPressed => Date.ToString("d", new CultureInfo("pl-PL"));
+    private DateOnly? Date => !string.IsNullOrEmpty(DateString)
+        ? DateOnly.ParseExact(DateString, "yyyy-MM-dd")
+        : null;
+    private string? DateStringPressed => Date?.ToString("d", new CultureInfo("pl-PL"));
 
     private GetOrdersPositionsResponse? getOrdersPositionsResponse;
     private readonly SortedList<int, GetProductionOrderPosition> sortedList = new();
@@ -314,9 +316,9 @@
 
     private async Task CheckParametersAndHandleClick()
     {
-        if (Date != default && Shift != 0 && Team != 0)
+        if (Date != default && Shift != 0 && Team != 0 && Date != null)
         {
-            await HandleItemClick((Date, Shift, Team));
+            await HandleItemClick((DateOnly.ParseExact(DateString, "yyyy-MM-dd"), Shift, Team));
         }
         else
         {
@@ -338,7 +340,7 @@
 
         await ProdPrioritiesService.AddPositionsToProductionPlanAsync(addPositionsToProductionPlan);
         await JSRuntime.InvokeVoidAsync("closeModal");
-        NavigationManager.NavigateTo($"/productionPlan?date={date}&shift={shift}&team={team}");
+        NavigationManager.NavigateTo($"/productionPlan?dateString={date.ToString("yyyy-MM-dd")}&shift={shift}&team={team}");
     }
 
     private void OpenRemark(GetProductionOrderPosition position)
