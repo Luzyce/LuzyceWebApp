@@ -48,7 +48,7 @@
                     <a type="button" class="btn" @onclick="() => quantitiesInStockComponent.ShowStockModal(productWarehousesStocks[prodOrder.Positions.IndexOf(position)], unit)">@productWarehousesStocks[prodOrder.Positions.IndexOf(position)].Quantity @position.Unit</a>
                 </td>
                 <td>
-                    @position.QuantityOnPlans @position.Unit
+                    <a type="button" class="btn" @onclick="() => quantitiesOnPlansComponent.ShowQuantitiesOnPlans(position.QuantitiesOnPlans, unit)">@position.QuantityOnPlans @position.Unit</a>
                 </td>
                 <td>
                     @UpdateNumberOfChanges(position)
@@ -122,6 +122,7 @@
 </div>
 
 <QuantitiesInStock @ref="quantitiesInStockComponent" />
+<QuantitiesOnPlans @ref="quantitiesOnPlansComponent" />
 
 @code {
     [Parameter] public int prodOrderId { get; set; }
@@ -129,6 +130,7 @@
     private GetProductionOrder? prodOrder;
     private List<ProductWarehouseStocks> productWarehousesStocks = [];
     private QuantitiesInStock quantitiesInStockComponent;
+    private QuantitiesOnPlans quantitiesOnPlansComponent;
     private const string unit = "szt.";
     private GetProductionOrderPosition selectedPosition = new();
     private string selectedRemark = string.Empty;
@@ -247,5 +249,4 @@
 
         return position.NumberOfChanges.ToString() ?? string.Empty;
     }
-
 }

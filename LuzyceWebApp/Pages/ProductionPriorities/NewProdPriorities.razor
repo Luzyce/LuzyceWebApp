@@ -51,9 +51,11 @@
         {
             <tr data-id="@item.Id" data-code="@item.Lampshade.Code" data-variant="@item.LampshadeNorm.Variant.Name">
                 <td>@item.Lampshade.Code @item.LampshadeNorm.Variant.Name @item.LampshadeDekor</td>
-                <td>@item.QuantityNetto</td>
-                <td>@item.QuantityOnPlans</td>
-                <td>@item.LampshadeNorm.QuantityPerChange</td>
+                <td>@item.QuantityNetto @item.Unit</td>
+                <td>
+                    <a type="button" class="btn" @onclick="() => quantitiesOnPlansComponent.ShowQuantitiesOnPlans(item.QuantitiesOnPlans, unit)">@item.QuantityOnPlans @item.Unit</a>
+                </td>
+                <td>@item.LampshadeNorm.QuantityPerChange @item.Unit</td>
                 <td>@item.NumberOfChanges.ToString()!.TrimEnd('0').TrimEnd(',').TrimEnd('.')</td>
                 <td>@item.ProductionOrderNumber</td>
                 <td>@item.Client</td>
@@ -220,6 +222,8 @@
     };
 </script>
 
+<QuantitiesOnPlans @ref="quantitiesOnPlansComponent" />
+
 @code {
     [Parameter] [SupplyParameterFromQuery] public string DateString { get; set; } = string.Empty;
 
@@ -237,6 +241,8 @@
     private readonly Dictionary<int, int> productionOrdersPositions = new();
     private ProductionPlansCalendar productionPlansCalendar = new ProductionPlansCalendar();
     private string selectedRemark = string.Empty;
+    private QuantitiesOnPlans quantitiesOnPlansComponent;
+    private const string unit = "szt.";
 
     protected override async Task OnInitializedAsync()
     {
